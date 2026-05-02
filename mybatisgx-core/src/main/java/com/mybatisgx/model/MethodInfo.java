@@ -44,6 +44,14 @@ public class MethodInfo {
      */
     private Boolean isBatch = false;
     /**
+     * 批量处理数据参数信息
+     */
+    private MethodParamInfo batchDataParamInfo;
+    /**
+     * 批量处理尺寸参数信息
+     */
+    private MethodParamInfo batchSizeParamInfo;
+    /**
      * 查询节点信息
      */
     private SelectItemInfo selectItemInfo;
@@ -141,6 +149,22 @@ public class MethodInfo {
         isBatch = batch;
     }
 
+    public MethodParamInfo getBatchDataParamInfo() {
+        return batchDataParamInfo;
+    }
+
+    public void setBatchDataParamInfo(MethodParamInfo batchDataParamInfo) {
+        this.batchDataParamInfo = batchDataParamInfo;
+    }
+
+    public MethodParamInfo getBatchSizeParamInfo() {
+        return batchSizeParamInfo;
+    }
+
+    public void setBatchSizeParamInfo(MethodParamInfo batchSizeParamInfo) {
+        this.batchSizeParamInfo = batchSizeParamInfo;
+    }
+
     public SelectItemInfo getSelectItemInfo() {
         return selectItemInfo;
     }
@@ -199,6 +223,15 @@ public class MethodInfo {
         for (MethodParamInfo methodParamInfo : methodParamInfoList) {
             methodParamInfoMap.put(methodParamInfo.getArgName(), methodParamInfo);
             methodParamInfoMap.put(methodParamInfo.getArgName().toLowerCase(), methodParamInfo);
+        }
+        // 批量参数处理
+        for (MethodParamInfo methodParamInfo : methodParamInfoList) {
+            if (methodParamInfo.getBatchData()) {
+                batchDataParamInfo = methodParamInfo;
+            }
+            if (methodParamInfo.getBatchSize()) {
+                batchSizeParamInfo = methodParamInfo;
+            }
         }
     }
 
