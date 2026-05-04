@@ -1,10 +1,11 @@
 package com.mybatisgx.ext.session;
 
-import com.mybatisgx.context.MybatisgxObjectFactory;
+import com.mybatisgx.context.MethodInfoContextHolder;
 import com.mybatisgx.executor.MybatisgxValueProcessor;
 import com.mybatisgx.ext.executor.MybatisgxBatchExecutor;
 import com.mybatisgx.ext.executor.MybatisgxRoutingExecutor;
 import com.mybatisgx.ext.executor.resultset.MybatisgxResultSetHandler;
+import com.mybatisgx.model.MethodInfo;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.executor.resultset.ResultSetHandler;
@@ -12,6 +13,7 @@ import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.ResultHandler;
@@ -19,6 +21,8 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 public class MybatisgxConfiguration extends Configuration {
+
+    private MybatisgxValueProcessor mybatisgxValueProcessor;
 
     public MybatisgxConfiguration() {
         super();
@@ -38,8 +42,17 @@ public class MybatisgxConfiguration extends Configuration {
     @Override
     public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
         StatementHandler statementHandler = super.newStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
-        MybatisgxValueProcessor mybatisgxValueProcessor = MybatisgxObjectFactory.get(MybatisgxValueProcessor.class);
-        mybatisgxValueProcessor.process(mappedStatement, parameterObject, statementHandler.getBoundSql());
+
+        MethodInfo methodInfo = MethodInfoContextHolder.get(mappedStatement.getId());
+        if (parameterObject == null || methodInfo == null) {
+            return statementHandler;
+        }
+        SqlCommandType sqlCommandType = mappedStatement.getSqlCommandType();
+        if (sqlCommandType == SqlCommandType.SELECT || sqlCommandType == SqlCommandType.DELETE) {
+            return statementHandler;
+        }
+
+        this.mybatisgxValueProcessor.process(mappedStatement, methodInfo, parameterObject, statementHandler.getBoundSql());
         return statementHandler;
     }
 
@@ -48,5 +61,9 @@ public class MybatisgxConfiguration extends Configuration {
         ResultSetHandler resultSetHandler = new MybatisgxResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
         resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
         return resultSetHandler;
+    }
+
+    public void setMybatisgxValueProcessor(MybatisgxValueProcessor mybatisgxValueProcessor) {
+        this.mybatisgxValueProcessor = mybatisgxValueProcessor;
     }
 }
