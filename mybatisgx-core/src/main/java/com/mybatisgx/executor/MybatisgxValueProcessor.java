@@ -1,12 +1,11 @@
 package com.mybatisgx.executor;
 
 import com.mybatisgx.annotation.LogicDeleteId;
+import com.mybatisgx.api.MethodCommandType;
 import com.mybatisgx.context.DaoMethodManager;
-import com.mybatisgx.context.EntityInfoContextHolder;
 import com.mybatisgx.context.MethodInfoContextHolder;
 import com.mybatisgx.model.*;
 import com.mybatisgx.spi.ValueProcessContext;
-import com.mybatisgx.spi.ValueProcessPhase;
 import com.mybatisgx.spi.ValueProcessor;
 import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.mapping.BoundSql;
@@ -34,35 +33,55 @@ public class MybatisgxValueProcessor {
         VALUE_HANDLER_MAP.put(LogicDeleteIdColumnInfo.class, new LogicDeleteIdFieldValueHandler());
     }
 
-    public Object process(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
-        if (parameterObject == null) {
-            return null;
+    public ValueProcessPrepareContext prepare(MappedStatement mappedStatement, Object parameterObject) {
+        Boolean isProcess = true;
+
+        MethodInfo methodInfo = MethodInfoContextHolder.get(mappedStatement.getId());
+        if (parameterObject == null || methodInfo == null) {
+            isProcess = false;
         }
         SqlCommandType sqlCommandType = mappedStatement.getSqlCommandType();
         if (sqlCommandType == SqlCommandType.SELECT || sqlCommandType == SqlCommandType.DELETE) {
-            return parameterObject;
+            isProcess = false;
         }
-        MethodInfo methodInfo = MethodInfoContextHolder.get(mappedStatement.getId());
-        if (methodInfo == null) {
-            return parameterObject;
+        // ValueProcessPhase phase = this.getValueProcessPhase(mappedStatement, methodInfo);
+        MethodCommandType methodCommandType = methodInfo.getMethodCommandType();
+        // 逻辑删除可能没有实体参数，但是新增和修改必须有实体参数
+        if (methodCommandType != MethodCommandType.LOGIC_DELETE) {
+            if (methodInfo.getEntityParamInfo() == null) {
+                isProcess = false;
+            }
         }
-        ValueProcessPhase phase = this.getValueProcessPhase(mappedStatement, methodInfo);
+
+        ValueProcessPrepareContext valueProcessPrepareContext = new ValueProcessPrepareContext();
+        valueProcessPrepareContext.setProcess(isProcess);
+        valueProcessPrepareContext.setCommandType(methodCommandType);
+        valueProcessPrepareContext.setMethodInfo(methodInfo);
+        return valueProcessPrepareContext;
+    }
+
+    public Object process(ValueProcessPrepareContext context, Object parameterObject, BoundSql boundSql) {
+        /*ValueProcessPhase phase = this.getValueProcessPhase(mappedStatement, methodInfo);
         // 逻辑删除可能没有实体参数，但是新增和修改必须有实体参数
         if (phase != ValueProcessPhase.LOGIC_DELETE) {
             if (methodInfo.getEntityParamInfo() == null) {
                 return parameterObject;
             }
-        }
+        }*/
 
-        Object useParameterObject = this.getParameterObject(methodInfo, parameterObject);
-        for (ColumnInfo columnInfo : methodInfo.getMapperInfo().getEntityInfo().getGenerateValueColumnInfoList()) {
+        MethodInfo methodInfo = context.getMethodInfo();
+        Object useParameterObject = this.unwrapParameterObject(methodInfo, parameterObject);
+        MetaObject metaObject = SystemMetaObject.forObject(useParameterObject);
+        context.setMetaObject(metaObject);
+
+        for (ColumnInfo columnInfo : methodInfo.getEntityParamInfo().getEntityInfo().getGenerateValueColumnInfoList()) {
             AbstractFieldValueHandler fieldValueHandler = this.VALUE_HANDLER_MAP.get(columnInfo.getClass());
-            fieldValueHandler.handle(methodInfo, phase, columnInfo, useParameterObject, boundSql);
+            fieldValueHandler.handle(context, columnInfo, useParameterObject, boundSql);
         }
         return useParameterObject;
     }
 
-    private ValueProcessPhase getValueProcessPhase(MappedStatement mappedStatement, MethodInfo methodInfo) {
+    /*private ValueProcessPhase getValueProcessPhase(MappedStatement mappedStatement, MethodInfo methodInfo) {
         ValueProcessPhase valueProcessPhase = null;
         if (mappedStatement.getSqlCommandType() == SqlCommandType.UPDATE && methodInfo.getSqlCommandType() == SqlCommandType.DELETE) {
             // mapper为更新操作，但是方法为删除删除，表示当前方法为逻辑删除
@@ -75,29 +94,29 @@ public class MybatisgxValueProcessor {
             valueProcessPhase = ValueProcessPhase.INSERT;
         }
         return valueProcessPhase;
-    }
+    }*/
 
-    private Object getParameterObject(MethodInfo methodInfo, Object parameterObject) {
+    private Object unwrapParameterObject(MethodInfo methodInfo, Object parameterObject) {
         MethodParamInfo entityParamInfo = methodInfo.getEntityParamInfo();
-        if (parameterObject instanceof MapperMethod.ParamMap && entityParamInfo != null) {
-            MapperMethod.ParamMap<Object> mapperMethodParameterObject = (MapperMethod.ParamMap<Object>) parameterObject;
+        if (entityParamInfo != null && entityParamInfo.getWrapper()) {
+            MapperMethod.ParamMap<Object> mapperMethodParamMap = (MapperMethod.ParamMap<Object>) parameterObject;
             String paramWrapperKey = methodInfo.getBatch() ? entityParamInfo.getBatchItemName() : entityParamInfo.getArgName();
-            return mapperMethodParameterObject.get(paramWrapperKey);
+            return mapperMethodParamMap.get(paramWrapperKey);
         }
         return parameterObject;
     }
 
     private static abstract class AbstractFieldValueHandler {
 
-        public abstract void handle(MethodInfo methodInfo, ValueProcessPhase phase, ColumnInfo columnInfo, Object parameterObject, BoundSql boundSql);
+        public abstract void handle(ValueProcessPrepareContext context, ColumnInfo columnInfo, Object parameterObject, BoundSql boundSql);
 
-        protected Object valueHandle(ValueProcessPhase phase, ColumnInfo columnInfo, Object originalValue, MetaObject entityMetaObject) {
+        protected Object valueHandle(MethodCommandType commandType, ColumnInfo columnInfo, Object originalValue, MetaObject entityMetaObject) {
             FieldInfo fieldInfo = new FieldInfo(columnInfo);
-            ValueProcessContext context = new DefaultValueProcessContext(phase, fieldInfo, originalValue, entityMetaObject);
+            ValueProcessContext context = new DefaultValueProcessContext(commandType, fieldInfo, originalValue, entityMetaObject);
             List<ValueProcessor> valueProcessors = DaoMethodManager.get(columnInfo.getGenerateValue().value());
             for (ValueProcessor valueProcessor : valueProcessors) {
                 if (valueProcessor.supports(fieldInfo)) {
-                    if (valueProcessor.phases().contains(phase)) {
+                    if (valueProcessor.commandTypes().contains(commandType)) {
                         Object fieldValue = valueProcessor.process(context);
                         context.setFieldValue(fieldValue);
                     }
@@ -110,11 +129,14 @@ public class MybatisgxValueProcessor {
     private static class LogicDeleteIdFieldValueHandler extends AbstractFieldValueHandler {
 
         @Override
-        public void handle(MethodInfo methodInfo, ValueProcessPhase phase, ColumnInfo columnInfo, Object parameterObject, BoundSql boundSql) {
+        public void handle(ValueProcessPrepareContext context, ColumnInfo columnInfo, Object parameterObject, BoundSql boundSql) {
+            MethodInfo methodInfo = context.getMethodInfo();
+            MethodCommandType commandType = context.getCommandType();
+
             EntityInfo entityInfo = methodInfo.getMapperInfo().getEntityInfo();
             LogicDeleteIdColumnInfo logicDeleteIdColumnInfo = (LogicDeleteIdColumnInfo) entityInfo.getLogicDeleteIdColumnInfo();
             if (logicDeleteIdColumnInfo != null) {
-                Object value = this.valueHandle(phase, columnInfo, null, null);
+                Object value = this.valueHandle(commandType, columnInfo, null, null);
                 LogicDeleteId logicDeleteId = logicDeleteIdColumnInfo.getLogicDeleteId();
                 boundSql.setAdditionalParameter(logicDeleteId.value(), value);
             }
@@ -124,15 +146,19 @@ public class MybatisgxValueProcessor {
     private static class CommonFieldValueHandler extends AbstractFieldValueHandler {
 
         @Override
-        public void handle(MethodInfo methodInfo, ValueProcessPhase phase, ColumnInfo columnInfo, Object parameterObject, BoundSql boundSql) {
-            EntityInfo parameterEntityInfo = EntityInfoContextHolder.get(parameterObject.getClass());
-            if (parameterEntityInfo == null) {
+        public void handle(ValueProcessPrepareContext context, ColumnInfo columnInfo, Object parameterObject, BoundSql boundSql) {
+            MethodInfo methodInfo = context.getMethodInfo();
+            MethodCommandType commandType = context.getCommandType();
+            MetaObject metaObject = context.getMetaObject();
+
+            Class<?> entityParamClass = methodInfo.getEntityParamInfo().getType();
+            if (!entityParamClass.isAssignableFrom(parameterObject.getClass())) {
                 return;
             }
-            MetaObject metaObject = SystemMetaObject.forObject(parameterObject);
+
             String javaColumnNamePath = columnInfo.getJavaColumnNamePath();
             Object fieldValue = metaObject.getValue(javaColumnNamePath);
-            Object value = this.valueHandle(phase, columnInfo, fieldValue, metaObject);
+            Object value = this.valueHandle(commandType, columnInfo, fieldValue, metaObject);
             metaObject.setValue(javaColumnNamePath, value);
         }
     }

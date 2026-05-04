@@ -1,11 +1,10 @@
 package com.mybatisgx.ext.session;
 
-import com.mybatisgx.context.MethodInfoContextHolder;
 import com.mybatisgx.executor.MybatisgxValueProcessor;
+import com.mybatisgx.executor.ValueProcessPrepareContext;
 import com.mybatisgx.ext.executor.MybatisgxBatchExecutor;
 import com.mybatisgx.ext.executor.MybatisgxRoutingExecutor;
 import com.mybatisgx.ext.executor.resultset.MybatisgxResultSetHandler;
-import com.mybatisgx.model.MethodInfo;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.executor.resultset.ResultSetHandler;
@@ -13,7 +12,6 @@ import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.ResultHandler;
@@ -43,16 +41,19 @@ public class MybatisgxConfiguration extends Configuration {
     public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
         StatementHandler statementHandler = super.newStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
 
-        MethodInfo methodInfo = MethodInfoContextHolder.get(mappedStatement.getId());
+        /*MethodInfo methodInfo = MethodInfoContextHolder.get(mappedStatement.getId());
         if (parameterObject == null || methodInfo == null) {
             return statementHandler;
         }
         SqlCommandType sqlCommandType = mappedStatement.getSqlCommandType();
         if (sqlCommandType == SqlCommandType.SELECT || sqlCommandType == SqlCommandType.DELETE) {
             return statementHandler;
-        }
+        }*/
 
-        this.mybatisgxValueProcessor.process(mappedStatement, methodInfo, parameterObject, statementHandler.getBoundSql());
+        ValueProcessPrepareContext context = this.mybatisgxValueProcessor.prepare(mappedStatement, parameterObject);
+        if (context.getProcess()) {
+            this.mybatisgxValueProcessor.process(context, parameterObject, statementHandler.getBoundSql());
+        }
         return statementHandler;
     }
 
