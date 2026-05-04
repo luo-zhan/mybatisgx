@@ -44,7 +44,6 @@ public class MybatisgxValueProcessor {
         if (sqlCommandType == SqlCommandType.SELECT || sqlCommandType == SqlCommandType.DELETE) {
             isProcess = false;
         }
-        // ValueProcessPhase phase = this.getValueProcessPhase(mappedStatement, methodInfo);
         MethodCommandType methodCommandType = methodInfo.getMethodCommandType();
         // 逻辑删除可能没有实体参数，但是新增和修改必须有实体参数
         if (methodCommandType != MethodCommandType.LOGIC_DELETE) {
@@ -61,14 +60,6 @@ public class MybatisgxValueProcessor {
     }
 
     public Object process(ValueProcessPrepareContext context, Object parameterObject, BoundSql boundSql) {
-        /*ValueProcessPhase phase = this.getValueProcessPhase(mappedStatement, methodInfo);
-        // 逻辑删除可能没有实体参数，但是新增和修改必须有实体参数
-        if (phase != ValueProcessPhase.LOGIC_DELETE) {
-            if (methodInfo.getEntityParamInfo() == null) {
-                return parameterObject;
-            }
-        }*/
-
         MethodInfo methodInfo = context.getMethodInfo();
         Object useParameterObject = this.unwrapParameterObject(methodInfo, parameterObject);
         MetaObject metaObject = SystemMetaObject.forObject(useParameterObject);
@@ -80,21 +71,6 @@ public class MybatisgxValueProcessor {
         }
         return useParameterObject;
     }
-
-    /*private ValueProcessPhase getValueProcessPhase(MappedStatement mappedStatement, MethodInfo methodInfo) {
-        ValueProcessPhase valueProcessPhase = null;
-        if (mappedStatement.getSqlCommandType() == SqlCommandType.UPDATE && methodInfo.getSqlCommandType() == SqlCommandType.DELETE) {
-            // mapper为更新操作，但是方法为删除删除，表示当前方法为逻辑删除
-            valueProcessPhase = ValueProcessPhase.LOGIC_DELETE;
-        }
-        if (mappedStatement.getSqlCommandType() == SqlCommandType.UPDATE && methodInfo.getSqlCommandType() == SqlCommandType.UPDATE) {
-            valueProcessPhase = ValueProcessPhase.UPDATE;
-        }
-        if (mappedStatement.getSqlCommandType() == SqlCommandType.INSERT && methodInfo.getSqlCommandType() == SqlCommandType.INSERT) {
-            valueProcessPhase = ValueProcessPhase.INSERT;
-        }
-        return valueProcessPhase;
-    }*/
 
     private Object unwrapParameterObject(MethodInfo methodInfo, Object parameterObject) {
         MethodParamInfo entityParamInfo = methodInfo.getEntityParamInfo();

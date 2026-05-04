@@ -40,16 +40,6 @@ public class MybatisgxConfiguration extends Configuration {
     @Override
     public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
         StatementHandler statementHandler = super.newStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
-
-        /*MethodInfo methodInfo = MethodInfoContextHolder.get(mappedStatement.getId());
-        if (parameterObject == null || methodInfo == null) {
-            return statementHandler;
-        }
-        SqlCommandType sqlCommandType = mappedStatement.getSqlCommandType();
-        if (sqlCommandType == SqlCommandType.SELECT || sqlCommandType == SqlCommandType.DELETE) {
-            return statementHandler;
-        }*/
-
         ValueProcessPrepareContext context = this.mybatisgxValueProcessor.prepare(mappedStatement, parameterObject);
         if (context.getProcess()) {
             this.mybatisgxValueProcessor.process(context, parameterObject, statementHandler.getBoundSql());
