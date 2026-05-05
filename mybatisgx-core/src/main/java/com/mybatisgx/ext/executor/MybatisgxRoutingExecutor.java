@@ -18,7 +18,7 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 import java.sql.SQLException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -46,49 +46,41 @@ public class MybatisgxRoutingExecutor implements Executor {
 
     @Override
     public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey cacheKey, BoundSql boundSql) throws SQLException {
-        Executor delegate = this.resolveExecutor(ms);
-        MethodInfo methodInfo = MethodInfoContextHolder.get(ms.getId());
-        MethodParamInfo pageParamInfo = methodInfo.getPageParamInfo();
-        if (pageParamInfo == null) {
-            return delegate.query(ms, parameter, rowBounds, resultHandler, cacheKey, boundSql);
-        } else {
-            Pageable pageable = this.getPageable(parameter, pageParamInfo);
-            return this.query(delegate, ms, parameter, rowBounds, resultHandler, cacheKey, boundSql, pageable);
-        }
+        return this.executeQuery(ms, parameter, rowBounds, resultHandler, cacheKey, boundSql);
     }
 
     @Override
     public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
-        Executor delegate = this.resolveExecutor(ms);
-        MethodInfo methodInfo = MethodInfoContextHolder.get(ms.getId());
-        MethodParamInfo pageParamInfo = methodInfo.getPageParamInfo();
-        if (pageParamInfo == null) {
-            return delegate.query(ms, parameter, rowBounds, resultHandler);
-        } else {
-            Pageable pageable = this.getPageable(parameter, pageParamInfo);
-            return this.query(delegate, ms, parameter, rowBounds, resultHandler, null, null, pageable);
-        }
+        return this.executeQuery(ms, parameter, rowBounds, resultHandler, null, null);
     }
 
-    private <E> List<E> query(Executor delegate, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey cacheKey, BoundSql boundSql, Pageable pageable) throws SQLException {
-        com.github.pagehelper.Page pagehelperPage = PageHelper.startPage(pageable.getPageNo(), pageable.getPageSize());
-        List<Object> list;
-        if (cacheKey == null && boundSql == null) {
-            list = delegate.query(ms, parameter, rowBounds, resultHandler);
-        } else {
-            list = delegate.query(ms, parameter, rowBounds, resultHandler, cacheKey, boundSql);
+    private <E> List<E> executeQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey cacheKey, BoundSql boundSql) throws SQLException {
+        MethodInfo methodInfo = MethodInfoContextHolder.get(ms.getId());
+        Executor delegate = this.resolveExecutor(ms, methodInfo);
+        MethodParamInfo pageParamInfo = methodInfo.getPageParamInfo();
+
+        // 非分页
+        if (pageParamInfo == null) {
+            return cacheKey == null
+                    ? delegate.query(ms, parameter, rowBounds, resultHandler)
+                    : delegate.query(ms, parameter, rowBounds, resultHandler, cacheKey, boundSql);
         }
+
+        Pageable pageable = this.getPageable(parameter, pageParamInfo);
+        com.github.pagehelper.Page pagehelperPage = PageHelper.startPage(pageable.getPageNo(), pageable.getPageSize());
+
+        List<Object> list = cacheKey == null && boundSql == null
+                ? delegate.query(ms, parameter, rowBounds, resultHandler)
+                : delegate.query(ms, parameter, rowBounds, resultHandler, cacheKey, boundSql);
+
         Page<Object> page = new Page(pagehelperPage.getTotal(), list);
-        return (List<E>) Arrays.asList(page);
+        return (List<E>) Collections.singletonList(page);
     }
 
     private Pageable getPageable(Object parameter, MethodParamInfo pageParamInfo) {
-        if (pageParamInfo.getWrapper()) {
-            Map<String, Object> parameterMap = (Map<String, Object>) parameter;
-            return (Pageable) parameterMap.get(pageParamInfo.getArgName());
-        } else {
-            return (Pageable) parameter;
-        }
+        return (Pageable) (pageParamInfo.getWrapper()
+                ? ((Map<String, Object>) parameter).get(pageParamInfo.getArgName())
+                : parameter);
     }
 
     @Override
@@ -159,7 +151,8 @@ public class MybatisgxRoutingExecutor implements Executor {
 
     @Override
     public void setExecutorWrapper(Executor executor) {
-        // delegate.setExecutorWrapper(executor);
+        Executor delegate = this.resolveExecutor();
+        delegate.setExecutorWrapper(executor);
     }
 
     private Executor resolveExecutor() {
@@ -167,10 +160,16 @@ public class MybatisgxRoutingExecutor implements Executor {
     }
 
     private Executor resolveExecutor(MappedStatement mappedStatement) {
-        MethodInfo methodInfo = null;
-        if (mappedStatement != null) {
-            methodInfo = MethodInfoContextHolder.get(mappedStatement.getId());
-        }
+        MethodInfo methodInfo = this.getMethodInfo(mappedStatement, null);
+        return this.resolveExecutor(mappedStatement, methodInfo);
+    }
+
+    private Executor resolveExecutor(MappedStatement mappedStatement, MethodInfo methodInfo) {
+        methodInfo = this.getMethodInfo(mappedStatement, methodInfo);
         return methodInfo != null && methodInfo.getBatch() ? batchExecutor : defaultExecutor;
+    }
+
+    private MethodInfo getMethodInfo(MappedStatement mappedStatement, MethodInfo methodInfo) {
+        return mappedStatement != null && methodInfo == null ? MethodInfoContextHolder.get(mappedStatement.getId()) : methodInfo;
     }
 }
