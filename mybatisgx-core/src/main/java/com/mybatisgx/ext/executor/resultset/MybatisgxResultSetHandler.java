@@ -28,15 +28,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 一句话描述
+ *
  * @author ccxuef
  * @date 2025/10/20 10:20
  */
 public class MybatisgxResultSetHandler extends PatchDefaultResultSetHandler {
 
-    private Executor executor;
-    private Configuration configuration;
-    private Map<String, BatchResultLoader.BatchResultLoaderContext> batchResultLoaderContextMap = new ConcurrentHashMap();
-    private Map<String, List<BatchResultLoader>> batchResultLoaderMap = new ConcurrentHashMap();
+    private final Executor executor;
+    private final Configuration configuration;
+    private final Map<String, BatchResultLoader.BatchResultLoaderContext> batchResultLoaderContextMap = new ConcurrentHashMap();
+    private final Map<String, List<BatchResultLoader>> batchResultLoaderMap = new ConcurrentHashMap();
 
     public MybatisgxResultSetHandler(Executor executor, MappedStatement mappedStatement, ParameterHandler parameterHandler, ResultHandler<?> resultHandler, BoundSql boundSql, RowBounds rowBounds) {
         super(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);

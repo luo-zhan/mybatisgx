@@ -23,11 +23,10 @@ import java.util.List;
 
 public class MybatisgxBatchExecutor implements Executor {
 
-    private Executor delegate;
+    private final Executor delegate;
 
     public MybatisgxBatchExecutor(Executor delegate) {
         this.delegate = delegate;
-        // delegate.setExecutorWrapper(this);
     }
 
     @Override
