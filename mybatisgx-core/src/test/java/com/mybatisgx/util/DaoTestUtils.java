@@ -66,4 +66,8 @@ public class DaoTestUtils {
         SqlSessionFactory sqlSessionFactory = new DefaultSqlSessionFactory(mybatisgxConfiguration);
         return sqlSessionFactory.openSession();
     }
+
+    public static MybatisgxConfiguration getMybatisgxConfiguration(String[] entityBasePackages, String[] daoBasePackages) {
+        return context(entityBasePackages, daoBasePackages);
+    }
 }
