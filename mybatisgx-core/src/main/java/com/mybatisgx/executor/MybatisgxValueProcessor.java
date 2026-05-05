@@ -3,7 +3,6 @@ package com.mybatisgx.executor;
 import com.mybatisgx.annotation.LogicDeleteId;
 import com.mybatisgx.api.MethodCommandType;
 import com.mybatisgx.context.DaoMethodManager;
-import com.mybatisgx.context.MethodInfoContextHolder;
 import com.mybatisgx.model.*;
 import com.mybatisgx.spi.ValueProcessContext;
 import com.mybatisgx.spi.ValueProcessor;
@@ -31,8 +30,8 @@ public class MybatisgxValueProcessor {
         VALUE_HANDLER_MAP.put(LogicDeleteIdColumnInfo.class, new LogicDeleteIdFieldValueHandler());
     }
 
-    public ValueProcessPrepareContext prepare(MappedStatement mappedStatement, Object parameterObject) {
-        MethodInfo methodInfo = MethodInfoContextHolder.get(mappedStatement.getId());
+    public ValueProcessPrepareContext prepare(MappedStatement ms, Object parameterObject) {
+        MethodInfo methodInfo = DaoMethodManager.getMethodInfo(ms);
         boolean isProcess = this.isProcess(methodInfo, parameterObject);
 
         ValueProcessPrepareContext valueProcessPrepareContext = new ValueProcessPrepareContext();

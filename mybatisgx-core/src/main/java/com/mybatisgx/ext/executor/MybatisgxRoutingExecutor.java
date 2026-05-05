@@ -1,7 +1,7 @@
 package com.mybatisgx.ext.executor;
 
 import com.github.pagehelper.PageHelper;
-import com.mybatisgx.context.MethodInfoContextHolder;
+import com.mybatisgx.context.DaoMethodManager;
 import com.mybatisgx.executor.page.Page;
 import com.mybatisgx.executor.page.Pageable;
 import com.mybatisgx.model.MethodInfo;
@@ -55,7 +55,7 @@ public class MybatisgxRoutingExecutor implements Executor {
     }
 
     private <E> List<E> executeQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey cacheKey, BoundSql boundSql) throws SQLException {
-        MethodInfo methodInfo = MethodInfoContextHolder.get(ms.getId());
+        MethodInfo methodInfo = DaoMethodManager.getMethodInfo(ms);
         Executor delegate = this.resolveExecutor(ms, methodInfo);
         MethodParamInfo pageParamInfo = methodInfo.getPageParamInfo();
 
@@ -164,12 +164,12 @@ public class MybatisgxRoutingExecutor implements Executor {
         return this.resolveExecutor(mappedStatement, methodInfo);
     }
 
-    private Executor resolveExecutor(MappedStatement mappedStatement, MethodInfo methodInfo) {
-        methodInfo = this.getMethodInfo(mappedStatement, methodInfo);
+    private Executor resolveExecutor(MappedStatement ms, MethodInfo methodInfo) {
+        methodInfo = this.getMethodInfo(ms, methodInfo);
         return methodInfo != null && methodInfo.getBatch() ? batchExecutor : defaultExecutor;
     }
 
-    private MethodInfo getMethodInfo(MappedStatement mappedStatement, MethodInfo methodInfo) {
-        return mappedStatement != null && methodInfo == null ? MethodInfoContextHolder.get(mappedStatement.getId()) : methodInfo;
+    private MethodInfo getMethodInfo(MappedStatement ms, MethodInfo methodInfo) {
+        return ms != null && methodInfo == null ? DaoMethodManager.getMethodInfo(ms) : methodInfo;
     }
 }

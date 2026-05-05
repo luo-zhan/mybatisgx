@@ -5,6 +5,9 @@ import com.mybatisgx.executor.ValueProcessPrepareContext;
 import com.mybatisgx.ext.executor.MybatisgxBatchExecutor;
 import com.mybatisgx.ext.executor.MybatisgxRoutingExecutor;
 import com.mybatisgx.ext.executor.resultset.MybatisgxResultSetHandler;
+import com.mybatisgx.model.MapperInfo;
+import com.mybatisgx.model.MethodInfo;
+import com.mybatisgx.utils.MethodInfoUtils;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.executor.resultset.ResultSetHandler;
@@ -18,9 +21,13 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
+import java.util.Map;
+
 public class MybatisgxConfiguration extends Configuration {
 
     private static final MybatisgxValueProcessor mybatisgxValueProcessor = new MybatisgxValueProcessor();
+
+    protected final Map<String, MethodInfo> methodInfoMap = new StrictMap("methodInfo collection");
 
     public MybatisgxConfiguration() {
         super();
@@ -52,5 +59,15 @@ public class MybatisgxConfiguration extends Configuration {
         ResultSetHandler resultSetHandler = new MybatisgxResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
         resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
         return resultSetHandler;
+    }
+
+    public MethodInfo getMethodInfo(MappedStatement ms) {
+        return this.methodInfoMap.get(ms.getId());
+    }
+
+    public void addMethodInfo(MethodInfo methodInfo) {
+        MapperInfo mapperInfo = methodInfo.getMapperInfo();
+        String namespaceMethodName = MethodInfoUtils.getNamespaceMethodName(mapperInfo.getNamespace(), methodInfo.getMethodName());
+        this.methodInfoMap.put(namespaceMethodName, methodInfo);
     }
 }

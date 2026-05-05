@@ -1,6 +1,6 @@
 package com.mybatisgx.ext.executor;
 
-import com.mybatisgx.context.MethodInfoContextHolder;
+import com.mybatisgx.context.DaoMethodManager;
 import com.mybatisgx.model.BatchParamInfo;
 import com.mybatisgx.model.MethodInfo;
 import com.mybatisgx.model.MethodParamInfo;
@@ -32,7 +32,7 @@ public class MybatisgxBatchExecutor implements Executor {
 
     @Override
     public int update(MappedStatement ms, Object parameter) throws SQLException {
-        MethodInfo methodInfo = MethodInfoContextHolder.get(ms.getId());
+        MethodInfo methodInfo = DaoMethodManager.getMethodInfo(ms);
         if (methodInfo.getBatch()) {
             BatchParamInfo batchParamInfo = methodInfo.getBatchParamInfo();
             MethodParamInfo dataParamInfo = batchParamInfo.getDataParamInfo();

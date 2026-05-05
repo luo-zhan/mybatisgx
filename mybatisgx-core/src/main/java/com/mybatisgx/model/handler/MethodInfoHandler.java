@@ -4,12 +4,12 @@ import com.google.common.collect.Lists;
 import com.mybatisgx.annotation.*;
 import com.mybatisgx.api.MethodCommandType;
 import com.mybatisgx.context.EntityInfoContextHolder;
-import com.mybatisgx.context.MethodInfoContextHolder;
 import com.mybatisgx.dao.Dao;
 import com.mybatisgx.exception.MybatisgxException;
 import com.mybatisgx.ext.session.MybatisgxConfiguration;
 import com.mybatisgx.model.*;
 import com.mybatisgx.utils.FieldNameUtils;
+import com.mybatisgx.utils.MethodInfoUtils;
 import com.mybatisgx.utils.TypeUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -36,7 +36,7 @@ public class MethodInfoHandler {
     private MybatisgxSyntaxProcessor mybatisgxSyntaxProcessor = new MybatisgxSyntaxProcessor();
     private EntityRelationTreeHandler entityRelationTreeHandler = new EntityRelationTreeHandler();
     private ResultMapInfoHandler resultMapInfoHandler = new ResultMapInfoHandler();
-    private MybatisgxConfiguration configuration;
+    private final MybatisgxConfiguration configuration;
 
     public MethodInfoHandler(MybatisgxConfiguration configuration) {
         this.configuration = configuration;
@@ -47,8 +47,7 @@ public class MethodInfoHandler {
         Map<String, MethodInfo> methodInfoMap = this.processMethod(methodList, mapperInfo);
         List<MethodInfo> methodInfoList = new ArrayList(20);
         for (MethodInfo methodInfo : methodInfoMap.values()) {
-            String namespaceMethodName = this.getNamespaceMethodName(mapperInfo, methodInfo.getMethodName());
-            MethodInfoContextHolder.set(namespaceMethodName, methodInfo);
+            this.configuration.addMethodInfo(methodInfo);
             methodInfoList.add(methodInfo);
         }
         return methodInfoList;
@@ -82,7 +81,7 @@ public class MethodInfoHandler {
             if (methodInfoMap.containsKey(methodName)) {
                 throw new MybatisgxException("dao接口方法无法重载，请修改方法名: %s", methodName);
             }
-            String namespaceMethodName = this.getNamespaceMethodName(mapperInfo, methodName);
+            String namespaceMethodName = MethodInfoUtils.getNamespaceMethodName(mapperInfo.getNamespace(), methodName);
             if (this.configuration.hasStatement(namespaceMethodName)) {
                 LOGGER.debug("方法{}已在mapper存在，无需处理该方法！", namespaceMethodName);
                 continue;
@@ -545,10 +544,6 @@ public class MethodInfoHandler {
             return Collection.class;
         }
         return null;
-    }
-
-    private String getNamespaceMethodName(MapperInfo mapperInfo, String methodName) {
-        return String.format("%s.%s", mapperInfo.getNamespace(), methodName);
     }
 
     /**

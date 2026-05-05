@@ -167,7 +167,6 @@ public class MybatisgxContextLoader {
     public void removeDaoInfo() {
         MapperInfoContextHolder.remove();
         MapperTemplateContextHolder.remove();
-        MethodInfoContextHolder.remove();
     }
 
     public void processTemplate() {
