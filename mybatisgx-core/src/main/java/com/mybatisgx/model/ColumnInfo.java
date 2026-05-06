@@ -23,6 +23,14 @@ public class ColumnInfo {
      */
     private Field field;
     /**
+     * 字段getter方法
+     */
+    private PropertyGetter<Object, Object> propertyGetter;
+    /**
+     * 字段getter方法
+     */
+    private PropertySetter<Object, Object> propertySetter;
+    /**
      * 类型类别
      */
     private TypeCategory typeCategory;
@@ -109,6 +117,22 @@ public class ColumnInfo {
 
     public void setField(Field field) {
         this.field = field;
+    }
+
+    public PropertyGetter<Object, Object> getPropertyGetter() {
+        return propertyGetter;
+    }
+
+    public void setPropertyGetter(PropertyGetter<Object, Object> propertyGetter) {
+        this.propertyGetter = propertyGetter;
+    }
+
+    public PropertySetter<Object, Object> getPropertySetter() {
+        return propertySetter;
+    }
+
+    public void setPropertySetter(PropertySetter<Object, Object> propertySetter) {
+        this.propertySetter = propertySetter;
     }
 
     public TypeCategory getTypeCategory() {
@@ -267,6 +291,14 @@ public class ColumnInfo {
 
     public void setGenerateValue(GeneratedValue generatedValue) {
         this.generatedValue = generatedValue;
+    }
+
+    public Object getValue(Object entity) {
+        return propertyGetter.get(entity);
+    }
+
+    public void setValue(Object entity, Object value) {
+        propertySetter.set(entity, value);
     }
 
     public static class Builder {

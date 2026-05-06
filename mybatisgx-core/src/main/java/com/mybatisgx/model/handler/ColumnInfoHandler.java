@@ -6,10 +6,12 @@ import com.mybatisgx.context.EntityInfoContextHolder;
 import com.mybatisgx.exception.MybatisgxException;
 import com.mybatisgx.model.*;
 import com.mybatisgx.spi.ValueProcessor;
+import com.mybatisgx.utils.BeanMethodUtils;
 import com.mybatisgx.utils.TypeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,6 +33,8 @@ public class ColumnInfoHandler {
     }
 
     private List<ColumnInfo> processColumnInfo(Class<?> clazz, ColumnInfo parentColumnInfo, Map<Type, Class<?>> typeParameterMap) {
+        Map<String, PropertyDescriptor> getterMethodMap = BeanMethodUtils.getGetterMethodMap(clazz);
+        Map<String, PropertyDescriptor> setterMethodMap = BeanMethodUtils.getSetterMethodMap(clazz);
         List<ColumnInfo> columnInfoList = new ArrayList<>();
         for (Field field : FieldUtils.getAllFields(clazz)) {
             int modifiers = field.getModifiers();
@@ -63,6 +67,8 @@ public class ColumnInfoHandler {
             if (columnInfo instanceof RelationColumnInfo) {
                 this.setRelationColumnInfo(field, (RelationColumnInfo) columnInfo);
             }
+
+            this.processPropertyMethod(getterMethodMap, setterMethodMap, columnInfo);
 
             columnInfoList.add(columnInfo);
         }
@@ -365,5 +371,12 @@ public class ColumnInfoHandler {
             throw new MybatisgxException("实体类 %s 不存在 %s 字段", javaType.getTypeName(), mappedBy);
         }
         return mappedByRelationColumnInfo;
+    }
+
+    private void processPropertyMethod(Map<String, PropertyDescriptor> getterMethodMap, Map<String, PropertyDescriptor> setterMethodMap, ColumnInfo columnInfo) {
+        PropertyDescriptor getterPropertyDescriptor = getterMethodMap.get(columnInfo.getJavaColumnName());
+        PropertyDescriptor setterPropertyDescriptor = setterMethodMap.get(columnInfo.getJavaColumnName());
+        columnInfo.setPropertyGetter(LambdaPropertyAccessorFactory.createGetter(getterPropertyDescriptor.getReadMethod()));
+        columnInfo.setPropertySetter(LambdaPropertyAccessorFactory.createSetter(setterPropertyDescriptor.getWriteMethod()));
     }
 }

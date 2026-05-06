@@ -6,10 +6,13 @@ import com.mybatisgx.context.DaoMethodManager;
 import com.mybatisgx.model.*;
 import com.mybatisgx.spi.ValueProcessContext;
 import com.mybatisgx.spi.ValueProcessor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.reflection.MetaObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MybatisgxValueProcessor {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MybatisgxValueProcessor.class);
     private static final Map<Class, AbstractFieldValueHandler> VALUE_HANDLER_MAP = new ConcurrentHashMap();
 
     static {
@@ -125,10 +129,16 @@ public class MybatisgxValueProcessor {
                 return;
             }
 
-            String javaColumnNamePath = columnInfo.getJavaColumnNamePath();
-            Object fieldValue = metaObject.getValue(javaColumnNamePath);
-            Object value = this.valueHandle(commandType, columnInfo, fieldValue, metaObject);
-            metaObject.setValue(javaColumnNamePath, value);
+            if (ObjectUtils.isEmpty(columnInfo.getComposites())) {
+                Object fieldValue = columnInfo.getValue(parameterObject);
+                Object value = this.valueHandle(commandType, columnInfo, fieldValue, metaObject);
+                columnInfo.setValue(parameterObject, value);
+            } else {
+                String javaColumnNamePath = columnInfo.getJavaColumnNamePath();
+                Object fieldValue = metaObject.getValue(javaColumnNamePath);
+                Object value = this.valueHandle(commandType, columnInfo, fieldValue, metaObject);
+                metaObject.setValue(javaColumnNamePath, value);
+            }
         }
     }
 }
