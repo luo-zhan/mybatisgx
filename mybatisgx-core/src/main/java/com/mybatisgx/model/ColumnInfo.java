@@ -1,6 +1,7 @@
 package com.mybatisgx.model;
 
 import com.mybatisgx.annotation.*;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
@@ -49,9 +50,13 @@ public class ColumnInfo {
      */
     private String javaColumnName;
     /**
-     * java字段名路径列表
+     * java字段名访问路径
      */
     private List<String> javaColumnNamePathList;
+    /**
+     * java字段访问链
+     */
+    private List<ColumnInfo> javaColumnChain;
     /**
      * 容器类型，List、Set
      */
@@ -176,16 +181,20 @@ public class ColumnInfo {
         this.javaColumnName = javaColumnName;
     }
 
-    public String getJavaColumnNamePath() {
-        return StringUtils.join(javaColumnNamePathList, ".");
-    }
-
     public List<String> getJavaColumnNamePathList() {
         return javaColumnNamePathList;
     }
 
     public void setJavaColumnNamePathList(List<String> javaColumnNamePathList) {
         this.javaColumnNamePathList = javaColumnNamePathList;
+    }
+
+    public List<ColumnInfo> getJavaColumnChain() {
+        return javaColumnChain;
+    }
+
+    public void setJavaColumnChain(List<ColumnInfo> javaColumnChain) {
+        this.javaColumnChain = javaColumnChain;
     }
 
     public Class<?> getCollectionType() {
