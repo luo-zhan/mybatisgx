@@ -395,7 +395,7 @@ public class ColumnInfoHandler {
         if (setterPropertyDescriptor == null) {
             throw new MybatisgxException("字段 %s 不存在set方法", javaColumnName);
         }
-        columnInfo.setPropertyGetter(LambdaPropertyAccessorFactory.createGetter(getterPropertyDescriptor.getReadMethod()));
-        columnInfo.setPropertySetter(LambdaPropertyAccessorFactory.createSetter(setterPropertyDescriptor.getWriteMethod()));
+        columnInfo.setPropertyGetter(LambdaAccessorFactory.createGetter(getterPropertyDescriptor.getReadMethod()));
+        columnInfo.setPropertySetter(LambdaAccessorFactory.createSetter(setterPropertyDescriptor.getWriteMethod()));
     }
 }

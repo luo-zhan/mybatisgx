@@ -1,20 +1,44 @@
 package com.mybatisgx.model.handler;
 
 import com.mybatisgx.exception.MybatisgxException;
+import com.mybatisgx.model.ObjectFactory;
 import com.mybatisgx.model.PropertyGetter;
 import com.mybatisgx.model.PropertySetter;
 
 import java.lang.invoke.*;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
 /**
  * @author：薛承城
- * @description：一句话描述
+ * @description：Lambda访问器工厂
  * @date：2026/5/5 21:15
  */
-public class LambdaPropertyAccessorFactory {
+public class LambdaAccessorFactory {
 
     private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
+
+    public static <T> ObjectFactory<T> createObject(Class<T> clazz) {
+        try {
+            Constructor<T> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
+
+            MethodHandle constructorHandle = LOOKUP.unreflectConstructor(constructor);
+
+            CallSite callSite = LambdaMetafactory.metafactory(
+                    LOOKUP,
+                    "create",
+                    MethodType.methodType(ObjectFactory.class),
+                    MethodType.methodType(Object.class),
+                    constructorHandle,
+                    MethodType.methodType(clazz)
+            );
+
+            return (ObjectFactory<T>) callSite.getTarget().invokeExact();
+        } catch (Throwable e) {
+            throw new MybatisgxException("Failed to create object factory for class: " + clazz, e);
+        }
+    }
 
     public static <T, R> PropertyGetter<T, R> createGetter(Method getterMethod) {
         try {
