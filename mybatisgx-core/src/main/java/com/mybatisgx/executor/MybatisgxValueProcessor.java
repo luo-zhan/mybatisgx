@@ -6,7 +6,6 @@ import com.mybatisgx.context.DaoMethodManager;
 import com.mybatisgx.model.*;
 import com.mybatisgx.spi.ValueProcessContext;
 import com.mybatisgx.spi.ValueProcessor;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -129,16 +128,45 @@ public class MybatisgxValueProcessor {
                 return;
             }
 
-            if (ObjectUtils.isEmpty(columnInfo.getComposites())) {
-                Object fieldValue = columnInfo.getValue(parameterObject);
-                Object value = this.valueHandle(commandType, columnInfo, fieldValue, metaObject);
-                columnInfo.setValue(parameterObject, value);
-            } else {
-                String javaColumnNamePath = columnInfo.getJavaColumnNamePath();
-                Object fieldValue = metaObject.getValue(javaColumnNamePath);
-                Object value = this.valueHandle(commandType, columnInfo, fieldValue, metaObject);
-                metaObject.setValue(javaColumnNamePath, value);
+            Object originalValue = this.getValueByChain(parameterObject, columnInfo);
+            Object value = this.valueHandle(commandType, columnInfo, originalValue, metaObject);
+            this.setValueByChain(parameterObject, columnInfo, value);
+        }
+
+        private Object getValueByChain(Object root, ColumnInfo columnInfo) {
+            Object current = root;
+
+            List<ColumnInfo> chain = columnInfo.getJavaColumnChain();
+            for (int i = 0; i < chain.size(); i++) {
+                if (current == null) {
+                    return null;
+                }
+                current = chain.get(i).getValue(current);
             }
+
+            return current;
+        }
+
+        private void setValueByChain(Object root, ColumnInfo columnInfo, Object value) {
+            Object current = root;
+
+            List<ColumnInfo> chain = columnInfo.getJavaColumnChain();
+            int lastIndex = chain.size() - 1;
+
+            for (int i = 0; i < lastIndex; i++) {
+                ColumnInfo currentColumn = chain.get(i);
+
+                Object next = currentColumn.getValue(current);
+
+                if (next == null) {
+                    next = currentColumn.getObjectFactory().create();
+                    currentColumn.setValue(current, next);
+                }
+
+                current = next;
+            }
+
+            chain.get(lastIndex).setValue(current, value);
         }
     }
 }
