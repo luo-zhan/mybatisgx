@@ -18,9 +18,9 @@ public class LambdaAccessorFactory {
 
     private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
-    public static <T> ObjectFactory<T> createObject(Class<T> clazz) {
+    public static <T> ObjectFactory<T> createObjectFactory(Class<?> clazz) {
         try {
-            Constructor<T> constructor = clazz.getDeclaredConstructor();
+            Constructor<?> constructor = clazz.getDeclaredConstructor();
             constructor.setAccessible(true);
 
             MethodHandle constructorHandle = LOOKUP.unreflectConstructor(constructor);

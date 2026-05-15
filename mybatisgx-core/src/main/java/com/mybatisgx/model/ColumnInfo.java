@@ -26,6 +26,10 @@ public class ColumnInfo {
      */
     private Field field;
     /**
+     * 对象工厂
+     */
+    private ObjectFactory<Object> objectFactory;
+    /**
      * 字段getter方法
      */
     private PropertyGetter<Object, Object> propertyGetter;
@@ -128,6 +132,14 @@ public class ColumnInfo {
 
     public void setField(Field field) {
         this.field = field;
+    }
+
+    public ObjectFactory<Object> getObjectFactory() {
+        return objectFactory;
+    }
+
+    public void setObjectFactory(ObjectFactory<Object> objectFactory) {
+        this.objectFactory = objectFactory;
     }
 
     public PropertyGetter<Object, Object> getPropertyGetter() {
