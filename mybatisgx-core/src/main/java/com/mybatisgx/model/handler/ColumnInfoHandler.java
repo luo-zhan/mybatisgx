@@ -2,11 +2,13 @@ package com.mybatisgx.model.handler;
 
 import com.google.common.base.CaseFormat;
 import com.mybatisgx.annotation.*;
+import com.mybatisgx.context.DaoMethodManager;
 import com.mybatisgx.context.EntityInfoContextHolder;
 import com.mybatisgx.exception.MybatisgxException;
 import com.mybatisgx.model.*;
 import com.mybatisgx.spi.ValueProcessor;
 import com.mybatisgx.utils.BeanMethodUtils;
+import com.mybatisgx.utils.FieldNameUtils;
 import com.mybatisgx.utils.TypeUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -14,10 +16,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -405,5 +404,175 @@ public class ColumnInfoHandler {
         columnInfo.setObjectFactory(LambdaAccessorFactory.createObjectFactory(columnInfo.getJavaType()));
         columnInfo.setPropertyGetter(LambdaAccessorFactory.createGetter(getterPropertyDescriptor.getReadMethod()));
         columnInfo.setPropertySetter(LambdaAccessorFactory.createSetter(setterPropertyDescriptor.getWriteMethod()));
+    }
+
+    public static class ColumnMap {
+
+        public void process(EntityInfo entityInfo) {
+            for (ColumnInfo columnInfo : entityInfo.getColumnInfoList()) {
+                this.validatorEntityColumn(entityInfo, columnInfo);
+                if (columnInfo.getVersion() != null) {
+                    entityInfo.setVersionColumnInfo(columnInfo);
+                }
+                if (columnInfo.getLogicDelete() != null) {
+                    entityInfo.setLogicDeleteColumnInfo(columnInfo);
+                }
+                if (TypeUtils.typeEquals(columnInfo, LogicDeleteIdColumnInfo.class)) {
+                    entityInfo.setLogicDeleteIdColumnInfo(columnInfo);
+                }
+                if (columnInfo instanceof RelationColumnInfo) {
+                    entityInfo.getRelationColumnInfoList().add((RelationColumnInfo) columnInfo);
+                }
+
+                this.processIdColumnInfo(entityInfo, columnInfo);
+                this.processGenerateValue(entityInfo, columnInfo);
+                ColumnInfo tableColumnInfo = this.getTableColumnInfo(columnInfo);
+
+                if (tableColumnInfo != null) {
+                    entityInfo.getTableColumnInfoList().add(columnInfo);
+                    if (TypeUtils.typeEquals(columnInfo, RelationColumnInfo.class)) {
+                        RelationColumnInfo relationColumnInfo = (RelationColumnInfo) columnInfo;
+                        List<ForeignKeyInfo> inverseForeignKeyInfoList = relationColumnInfo.getInverseForeignKeyInfoList();
+                        for (ForeignKeyInfo inverseForeignKeyInfo : inverseForeignKeyInfoList) {
+                            ColumnInfo inverseForeignKeyColumnInfo = inverseForeignKeyInfo.getColumnInfo();
+                            entityInfo.addTableColumnMap(inverseForeignKeyColumnInfo.getDbColumnName(), inverseForeignKeyColumnInfo.getJavaColumnName());
+                        }
+                    } else {
+                        entityInfo.addTableColumnMap(columnInfo.getDbColumnName(), columnInfo.getJavaColumnName());
+                    }
+                }
+                if (tableColumnInfo != null && TypeUtils.typeEquals(tableColumnInfo, RelationColumnInfo.class)) {
+                    ColumnInfo independenceColumnInfo = this.relationColumnInfoToColumnInfo(tableColumnInfo);
+                    entityInfo.addColumnMap(independenceColumnInfo.getJavaColumnName(), independenceColumnInfo);
+                }
+                entityInfo.addColumnMap(columnInfo.getJavaColumnName(), columnInfo);
+            }
+        }
+
+        /**
+         * id字段特殊，如果是联合主键，则自动生成一个id映射到联合主键
+         *
+         * @param columnInfo
+         */
+        private void processIdColumnInfo(EntityInfo entityInfo, ColumnInfo columnInfo) {
+            if (columnInfo instanceof IdColumnInfo) {
+                IdColumnInfo idColumnInfo = (IdColumnInfo) columnInfo;
+                entityInfo.setIdColumnInfo(idColumnInfo);
+                entityInfo.addColumnMap("id", idColumnInfo);
+                entityInfo.addTableColumnMap("id", idColumnInfo.getJavaColumnName());
+
+                List<ColumnInfo> composites = idColumnInfo.getComposites();
+                if (ObjectUtils.isEmpty(composites)) {
+                    return;
+                }
+                for (ColumnInfo composite : composites) {
+                    IdColumnInfo wrapIdColumnInfo = new IdColumnInfo();
+                    wrapIdColumnInfo.setJavaColumnName(idColumnInfo.getJavaColumnName());
+                    wrapIdColumnInfo.setDbColumnName(idColumnInfo.getDbColumnName());
+                    wrapIdColumnInfo.setEmbeddedId(idColumnInfo.getEmbeddedId());
+                    wrapIdColumnInfo.setComposites(Arrays.asList(composite));
+                    entityInfo.addColumnMap(composite.getJavaColumnName(), wrapIdColumnInfo);
+
+                    String wrapJavaColumnName = String.format("%s.%s", idColumnInfo.getJavaColumnName(), composite.getJavaColumnName());
+                    entityInfo.addColumnMap(wrapJavaColumnName, wrapIdColumnInfo);
+                }
+            }
+        }
+
+        /**
+         * 获取表字段
+         * 1、字段不存在关联实体为表字段
+         * 2、存在关联实体并且是关系维护方才是表字段【多对多关联字段在中间表，所以实体中是不存在表字段的】
+         * @param columnInfo
+         * @return
+         */
+        private ColumnInfo getTableColumnInfo(ColumnInfo columnInfo) {
+            ColumnInfo tableColumnInfo = null;
+            if (TypeUtils.typeEquals(columnInfo, RelationColumnInfo.class)) {
+                RelationColumnInfo relationColumnInfo = (RelationColumnInfo) columnInfo;
+                String mappedBy = relationColumnInfo.getMappedBy();
+                if (relationColumnInfo.getManyToMany() == null && StringUtils.isBlank(mappedBy)) {
+                    tableColumnInfo = columnInfo;
+                }
+            } else {
+                Transient nonPersistent = columnInfo.getNonPersistent();
+                if (nonPersistent == null) {
+                    tableColumnInfo = columnInfo;
+                }
+            }
+            return tableColumnInfo;
+        }
+
+        private void processGenerateValue(EntityInfo entityInfo, ColumnInfo columnInfo) {
+            List<ColumnInfo> generateValueColumnInfoList = new ArrayList<>();
+            if (TypeUtils.typeEquals(columnInfo, IdColumnInfo.class)) {
+                List<ColumnInfo> columnInfoComposites = columnInfo.getComposites();
+                if (ObjectUtils.isEmpty(columnInfoComposites)) {
+                    generateValueColumnInfoList.add(columnInfo);
+                } else {
+                    for (ColumnInfo compositeColumnInfo : columnInfoComposites) {
+                        generateValueColumnInfoList.add(compositeColumnInfo);
+                    }
+                }
+            } else {
+                generateValueColumnInfoList.add(columnInfo);
+            }
+            for (ColumnInfo generateValueColumnInfo : generateValueColumnInfoList) {
+                if (generateValueColumnInfo.getGenerateValue() != null) {
+                    entityInfo.addGenerateValueColumnInfo(generateValueColumnInfo);
+                    DaoMethodManager.register((Class<ValueProcessor>[]) generateValueColumnInfo.getGenerateValue().value());
+                }
+            }
+        }
+
+        /**
+         * 把关联字段转成普通表字段
+         * @param relationColumnInfo
+         * @return
+         */
+        private ColumnInfo relationColumnInfoToColumnInfo(ColumnInfo relationColumnInfo) {
+            // 解决关联字段单独作为条件查询
+            String tableColumnName = relationColumnInfo.getDbColumnName();
+            // order_column -> orderColumn
+            String entityColumnName = FieldNameUtils.lowerUnderscoreToLowerCamel(tableColumnName);
+
+            ColumnInfo columnInfo = new ColumnInfo();
+            columnInfo.setColumn(relationColumnInfo.getColumn());
+            columnInfo.setJavaColumnName(entityColumnName);
+            columnInfo.setDbColumnName(relationColumnInfo.getDbColumnName());
+            columnInfo.setTypeCategory(TypeCategory.SIMPLE);
+            return columnInfo;
+        }
+
+        private void validatorEntityColumn(EntityInfo entityInfo, ColumnInfo columnInfo) {
+            if (TypeUtils.typeEquals(columnInfo, RelationColumnInfo.class)) {
+                RelationColumnInfo relationColumnInfo = (RelationColumnInfo) columnInfo;
+                RelationType relationType = relationColumnInfo.getRelationType();
+                if (relationType == RelationType.ONE_TO_ONE) {
+                    Class<?> collectionType = relationColumnInfo.getCollectionType();
+                    if (collectionType != null) {
+                        throw new MybatisgxException("%s 类中的字段 %s 关系为一对一，字段类型不能使用Set或者List", entityInfo.getClazzName(), relationColumnInfo.getJavaColumnName());
+                    }
+                }
+                if (relationType == RelationType.ONE_TO_MANY) {
+                    Class<?> collectionType = relationColumnInfo.getCollectionType();
+                    if (collectionType == null || TypeUtils.typeNotEquals(collectionType, List.class, Set.class)) {
+                        throw new MybatisgxException("%s 类中的字段 %s 关系为一对多，字段类型不能是对象，需要使用Set或者List", entityInfo.getClazzName(), relationColumnInfo.getJavaColumnName());
+                    }
+                }
+                if (relationType == RelationType.MANY_TO_ONE) {
+                    Class<?> collectionType = relationColumnInfo.getCollectionType();
+                    if (collectionType != null) {
+                        throw new MybatisgxException("%s 类中的字段 %s 关系为多对一，字段类型不能使用Set或者List", entityInfo.getClazzName(), relationColumnInfo.getJavaColumnName());
+                    }
+                }
+                if (relationType == RelationType.MANY_TO_MANY) {
+                    Class<?> collectionType = relationColumnInfo.getCollectionType();
+                    if (collectionType == null || TypeUtils.typeNotEquals(collectionType, List.class, Set.class)) {
+                        throw new MybatisgxException("%s 类中的字段 %s 关系为多对多，字段类型不能是对象，需要使用Set或者List", entityInfo.getClazzName(), relationColumnInfo.getJavaColumnName());
+                    }
+                }
+            }
+        }
     }
 }
