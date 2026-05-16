@@ -98,7 +98,7 @@ public class ColumnInfoHandler {
                 }
             } else {
                 String fieldName = field.getName();
-                tableColumnName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, fieldName);
+                tableColumnName = FieldNameUtils.lowerCamelToLowerUnderscore(fieldName);
             }
         }
         return tableColumnName;
