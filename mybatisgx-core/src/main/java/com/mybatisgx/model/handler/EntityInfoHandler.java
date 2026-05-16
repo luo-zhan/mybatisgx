@@ -26,7 +26,8 @@ public class EntityInfoHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(EntityInfoHandler.class);
 
-    private ColumnInfoHandler columnInfoHandler = new ColumnInfoHandler();
+    private static final ColumnInfoHandler columnInfoHandler = new ColumnInfoHandler();
+    private static final ColumnInfoHandler.ColumnMap columnMapHandler = new ColumnInfoHandler.ColumnMap();
 
     public EntityInfo execute(Class<?> entityClass) {
         Entity entity = entityClass.getAnnotation(Entity.class);
@@ -57,8 +58,8 @@ public class EntityInfoHandler {
                 .setClazz(entityClass)
                 .setColumnInfoList(columnInfoList)
                 .setTypeParameterMap(typeParameterMap)
-                .process()
                 .build();
+        this.columnMapHandler.process(entityInfo);
         this.validatePropertyExist(entityInfo);
         return entityInfo;
     }
