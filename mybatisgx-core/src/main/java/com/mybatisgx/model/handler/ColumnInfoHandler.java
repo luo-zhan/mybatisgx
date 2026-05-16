@@ -77,20 +77,8 @@ public class ColumnInfoHandler {
     }
 
     private String getTableColumnName(Field field) {
-        OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-        OneToMany oneToMany = field.getAnnotation(OneToMany.class);
-        ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-        ManyToMany manyToMany = field.getAnnotation(ManyToMany.class);
-
         String tableColumnName = "";
-        if (oneToOne != null || oneToMany != null || manyToOne != null) {
-            JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
-            if (joinColumn != null) {
-                tableColumnName = joinColumn.name();
-            }
-        } else if (manyToMany != null) {
-
-        } else {
+        if (!isGenerateTableColumnName(field)) {
             Column column = field.getAnnotation(Column.class);
             if (column != null) {
                 if (StringUtils.isNotBlank(column.name())) {
@@ -102,6 +90,14 @@ public class ColumnInfoHandler {
             }
         }
         return tableColumnName;
+    }
+
+    private boolean isGenerateTableColumnName(Field field) {
+        return field.isAnnotationPresent(OneToOne.class)
+                || field.isAnnotationPresent(OneToMany.class)
+                || field.isAnnotationPresent(ManyToOne.class)
+                || field.isAnnotationPresent(ManyToMany.class)
+                || field.isAnnotationPresent(Transient.class);
     }
 
     private void processColumnType(Field field, ColumnInfo columnInfo, Map<Type, Class<?>> typeParameterMap) {
