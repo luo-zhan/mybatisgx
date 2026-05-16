@@ -1,6 +1,5 @@
 package com.mybatisgx.model.handler;
 
-import com.google.common.base.CaseFormat;
 import com.mybatisgx.annotation.*;
 import com.mybatisgx.context.DaoMethodManager;
 import com.mybatisgx.context.EntityInfoContextHolder;
@@ -312,13 +311,13 @@ public class ColumnInfoHandler {
         for (JoinColumn joinColumn : joinColumnList) {
             String name = joinColumn.name();
             // orderColumn、order_column -> order_column
-            String dbColumnName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, name);
+            String tableColumnName = FieldNameUtils.lowerCamelToLowerUnderscore(name);
             // order_column -> orderColumn
-            String javaColumnName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, dbColumnName);
+            String javaColumnName = FieldNameUtils.lowerUnderscoreToLowerCamel(tableColumnName);
 
             ColumnInfo columnInfo = new ColumnInfo();
             columnInfo.setJavaColumnName(javaColumnName);
-            columnInfo.setDbColumnName(dbColumnName);
+            columnInfo.setDbColumnName(tableColumnName);
             String referencedColumnName = joinColumn.referencedColumnName();
             ForeignKeyInfo foreignKeyColumnInfo = new ForeignKeyInfo(columnInfo, referencedColumnName);
             foreignKeyColumnInfoList.add(foreignKeyColumnInfo);
