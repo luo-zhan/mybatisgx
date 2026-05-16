@@ -423,24 +423,29 @@ public class ColumnInfoHandler {
                 this.processGenerateValue(entityInfo, columnInfo);
 
                 ColumnInfo tableColumnInfo = this.getTableColumnInfo(columnInfo);
-                if (tableColumnInfo != null) {
-                    entityInfo.addTableColumnInfo(columnInfo);
-                    if (TypeUtils.typeEquals(columnInfo, RelationColumnInfo.class)) {
-                        RelationColumnInfo relationColumnInfo = (RelationColumnInfo) columnInfo;
-                        List<ForeignKeyInfo> inverseForeignKeyInfoList = relationColumnInfo.getInverseForeignKeyInfoList();
-                        for (ForeignKeyInfo inverseForeignKeyInfo : inverseForeignKeyInfoList) {
-                            ColumnInfo inverseForeignKeyColumnInfo = inverseForeignKeyInfo.getColumnInfo();
-                            entityInfo.addTableColumnMap(inverseForeignKeyColumnInfo.getDbColumnName(), inverseForeignKeyColumnInfo.getJavaColumnName());
-                        }
-                    } else {
+                {
+                    if (tableColumnInfo != null) {
+                        entityInfo.addTableColumnInfo(columnInfo);
+                    }
+                    if (tableColumnInfo != null && TypeUtils.typeNotEquals(tableColumnInfo, RelationColumnInfo.class)) {
                         entityInfo.addTableColumnMap(columnInfo.getDbColumnName(), columnInfo.getJavaColumnName());
+                    } else {
+                        RelationColumnInfo relationColumnInfo = (RelationColumnInfo) columnInfo;
+                        for (ForeignKeyInfo inverseForeignKeyInfo : relationColumnInfo.getInverseForeignKeyInfoList()) {
+                            entityInfo.addTableColumnMap(inverseForeignKeyInfo.getColumnInfo().getDbColumnName(), columnInfo.getJavaColumnName());
+                        }
                     }
                 }
-                if (tableColumnInfo != null && TypeUtils.typeEquals(tableColumnInfo, RelationColumnInfo.class)) {
-                    ColumnInfo independenceColumnInfo = this.relationColumnInfoToColumnInfo(tableColumnInfo);
-                    entityInfo.addColumnMap(independenceColumnInfo.getJavaColumnName(), independenceColumnInfo);
+                {
+                    if (tableColumnInfo != null && TypeUtils.typeEquals(tableColumnInfo, RelationColumnInfo.class)) {
+                        RelationColumnInfo relationColumnInfo = (RelationColumnInfo) columnInfo;
+                        for (ForeignKeyInfo inverseForeignKeyInfo : relationColumnInfo.getInverseForeignKeyInfoList()) {
+                            ColumnInfo independenceColumnInfo = this.relationColumnInfoToColumnInfo(inverseForeignKeyInfo.getColumnInfo());
+                            entityInfo.addColumnMap(independenceColumnInfo.getJavaColumnName(), independenceColumnInfo);
+                        }
+                    }
+                    entityInfo.addColumnMap(columnInfo.getJavaColumnName(), columnInfo);
                 }
-                entityInfo.addColumnMap(columnInfo.getJavaColumnName(), columnInfo);
             }
         }
 
@@ -527,13 +532,9 @@ public class ColumnInfoHandler {
          */
         private ColumnInfo relationColumnInfoToColumnInfo(ColumnInfo relationColumnInfo) {
             // 解决关联字段单独作为条件查询
-            String tableColumnName = relationColumnInfo.getDbColumnName();
-            // order_column -> orderColumn
-            String entityColumnName = FieldNameUtils.lowerUnderscoreToLowerCamel(tableColumnName);
-
             ColumnInfo columnInfo = new ColumnInfo();
             columnInfo.setColumn(relationColumnInfo.getColumn());
-            columnInfo.setJavaColumnName(entityColumnName);
+            columnInfo.setJavaColumnName(relationColumnInfo.getJavaColumnName());
             columnInfo.setDbColumnName(relationColumnInfo.getDbColumnName());
             columnInfo.setTypeCategory(TypeCategory.SIMPLE);
             return columnInfo;
