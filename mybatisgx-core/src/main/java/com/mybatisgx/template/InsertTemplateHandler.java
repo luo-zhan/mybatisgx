@@ -187,35 +187,6 @@ public class InsertTemplateHandler {
             trimOrIfElement.addText(valueExpression);
         }
 
-        private Element buildTrimOrIfElement(MethodInfo methodInfo, ColumnInfo columnInfo, Element trimElement, String testExpression) {
-            if (methodInfo.getDynamic() && columnInfo.getGenerateValue() == null) {
-                return MybatisXmlHelper.buildIfElement(trimElement, testExpression);
-                // Element ifElement = trimElement.addElement("if");
-                // ifElement.addAttribute("test", testExpression);
-                // return ifElement;
-            }
-            return trimElement;
-        }
-
-        protected String getTestExpression(List<String> pathItemList) {
-            String[] paths = pathItemList.toArray(new String[pathItemList.size()]);
-            if (paths.length == 1) {
-                return String.format("%1$s != null", paths);
-            }
-            if (paths.length == 2) {
-                return String.format("%1$s != null and %1$s.%2$s != null", paths);
-            }
-            if (paths.length == 3) {
-                return String.format("%1$s != null and %1$s.%2$s != null and %1$s.%2$s.%3$s != null", paths);
-            }
-            return "";
-        }
-
-        protected String getValueExpression(List<String> pathItemList, ColumnInfo columnInfo) {
-            String valuePath = StringUtils.join(pathItemList, ".");
-            return String.format("#{%s%s},", valuePath, buildTypeHandler(columnInfo));
-        }
-
         protected String buildTypeHandler(ColumnInfo columnInfo) {
             String typeHandler = columnInfo.getTypeHandler();
             if (StringUtils.isNotBlank(typeHandler)) {
