@@ -240,20 +240,6 @@ public class WhereTemplateHandler {
             throw new MybatisgxException("columnInfoClassCategory is null");
         }
 
-        protected String getTestExpression(List<String> pathItemList) {
-            String[] paths = pathItemList.toArray(new String[pathItemList.size()]);
-            if (paths.length == 1) {
-                return String.format("%1$s != null", paths);
-            }
-            if (paths.length == 2) {
-                return String.format("%1$s != null and %1$s.%2$s != null", paths);
-            }
-            if (paths.length == 3) {
-                return String.format("%1$s != null and %1$s.%2$s != null and %1$s.%2$s.%3$s != null", paths);
-            }
-            return "";
-        }
-
         protected String getParamValueExpression(List<String> pathItemList) {
             return String.format("#{%1$s}", StringUtils.join(pathItemList, "."));
         }
@@ -287,20 +273,7 @@ public class WhereTemplateHandler {
             if (this.comparisonOperator.isNullComparisonOperator()) {
                 return whereElement;
             }
-            if (dynamic) {
-                return MybatisXmlHelper.buildIfElement(whereElement, testExpression);
-                /*Element ifElement = whereElement.addElement("if");
-                ifElement.addAttribute("test", testExpression);
-                return ifElement;*/
-            }
-            return whereElement;
-        }
-
-        protected Element buildBindElement(String name, String value) {
-            Element bindElement = DocumentHelper.createElement("bind");
-            bindElement.addAttribute("name", name);
-            bindElement.addAttribute("value", value);
-            return bindElement;
+            return dynamic ? MybatisXmlHelper.buildIfElement(whereElement, testExpression) : whereElement;
         }
 
         protected List<String> getParamValuePathItemList(ColumnInfo columnInfo, ColumnInfo columnInfoComposite) {
@@ -452,18 +425,6 @@ public class WhereTemplateHandler {
             String conditionExpression = this.getConditionExpression(columnInfo, "");
             Element foreachElement = MybatisXmlHelper.buildForeachElement(paramValueExpression);
             return new WhereItemContext(testExpression, Arrays.asList(conditionExpression, foreachElement));
-        }
-
-        private Element buildForeachElement(String collection) {
-            Element foreachElement = DocumentHelper.createElement("foreach");
-            foreachElement.addAttribute("index", "index");
-            foreachElement.addAttribute("item", "item");
-            foreachElement.addAttribute("collection", collection);
-            foreachElement.addAttribute("open", "(");
-            foreachElement.addAttribute("close", ")");
-            foreachElement.addAttribute("separator", ",");
-            foreachElement.addText("#{item}");
-            return foreachElement;
         }
     }
 
