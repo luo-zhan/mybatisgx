@@ -200,7 +200,16 @@ public class InsertTemplateHandler {
             return entityInfo.getTableColumnInfoList();
         }
 
-        abstract protected List<String> getParamValuePathItemList(MethodParamInfo methodParamInfo, ColumnInfo columnInfo, ColumnInfo leafColumnInfo);
+        protected List<String> getParamValuePathItemList(MethodParamInfo methodParamInfo, ColumnInfo columnInfo, ColumnInfo leafColumnInfo) {
+            List<String> argValueCommonPathItemList = new ArrayList(5);
+            if (columnInfo != null) {
+                argValueCommonPathItemList.addAll(columnInfo.getJavaColumnNamePathList());
+            }
+            if (leafColumnInfo != null) {
+                argValueCommonPathItemList.addAll(leafColumnInfo.getJavaColumnNamePathList());
+            }
+            return argValueCommonPathItemList;
+        }
     }
 
     private static class SimpleInsertHandler extends AbstractInsertHandler {
@@ -231,11 +240,9 @@ public class InsertTemplateHandler {
         @Override
         protected List<String> getParamValuePathItemList(MethodParamInfo methodParamInfo, ColumnInfo columnInfo, ColumnInfo leafColumnInfo) {
             List<String> argValueCommonPathItemList = Lists.newArrayList(methodParamInfo.getArgValueCommonPathItemList());
-            if (columnInfo != null) {
-                argValueCommonPathItemList.addAll(columnInfo.getJavaColumnNamePathList());
-            }
-            if (leafColumnInfo != null) {
-                argValueCommonPathItemList.addAll(leafColumnInfo.getJavaColumnNamePathList());
+            List<String> pathItemList = super.getParamValuePathItemList(methodParamInfo, columnInfo, leafColumnInfo);
+            if (ObjectUtils.isNotEmpty(pathItemList)) {
+                argValueCommonPathItemList.addAll(pathItemList);
             }
             return argValueCommonPathItemList;
         }
@@ -272,11 +279,9 @@ public class InsertTemplateHandler {
             // int insertBatch(@BatchData List<ENTITY> entityList, @BatchSize int batchSize);
             String batchItemName = methodParamInfo.getBatchItemName();
             List<String> argValueCommonPathItemList = Lists.newArrayList(batchItemName);
-            if (columnInfo != null) {
-                argValueCommonPathItemList.addAll(columnInfo.getJavaColumnNamePathList());
-            }
-            if (leafColumnInfo != null) {
-                argValueCommonPathItemList.addAll(leafColumnInfo.getJavaColumnNamePathList());
+            List<String> pathItemList = super.getParamValuePathItemList(methodParamInfo, columnInfo, leafColumnInfo);
+            if (ObjectUtils.isNotEmpty(pathItemList)) {
+                argValueCommonPathItemList.addAll(pathItemList);
             }
             return argValueCommonPathItemList;
         }
