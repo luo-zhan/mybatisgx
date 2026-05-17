@@ -28,6 +28,7 @@ public class EntityInfoHandler {
 
     private static final ColumnInfoHandler columnInfoHandler = new ColumnInfoHandler();
     private static final ColumnInfoHandler.ColumnMap columnMapHandler = new ColumnInfoHandler.ColumnMap();
+    private static final ColumnInfoHandler.ColumnRelation columnRelationHandler = new ColumnInfoHandler.ColumnRelation();
 
     public EntityInfo execute(Class<?> entityClass) {
         Entity entity = entityClass.getAnnotation(Entity.class);
@@ -67,7 +68,7 @@ public class EntityInfoHandler {
     public void processColumnRelation(MybatisgxConfiguration configuration) {
         for (Class<?> entityClass : configuration.getEntityClassList()) {
             EntityInfo entityInfo = configuration.getEntityInfo(entityClass);
-            this.columnInfoHandler.processRelation(entityInfo);
+            this.columnRelationHandler.processRelation(entityInfo);
         }
     }
 
