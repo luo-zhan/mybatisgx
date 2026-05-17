@@ -235,9 +235,7 @@ public class InsertTemplateHandler {
         protected List<String> getParamValuePathItemList(MethodParamInfo methodParamInfo, ColumnInfo columnInfo, ColumnInfo leafColumnInfo) {
             List<String> argValueCommonPathItemList = Lists.newArrayList(methodParamInfo.getArgValueCommonPathItemList());
             List<String> pathItemList = super.getParamValuePathItemList(methodParamInfo, columnInfo, leafColumnInfo);
-            if (ObjectUtils.isNotEmpty(pathItemList)) {
-                argValueCommonPathItemList.addAll(pathItemList);
-            }
+            argValueCommonPathItemList.addAll(pathItemList);
             return argValueCommonPathItemList;
         }
     }
@@ -274,9 +272,7 @@ public class InsertTemplateHandler {
             String batchItemName = methodParamInfo.getBatchItemName();
             List<String> argValueCommonPathItemList = Lists.newArrayList(batchItemName);
             List<String> pathItemList = super.getParamValuePathItemList(methodParamInfo, columnInfo, leafColumnInfo);
-            if (ObjectUtils.isNotEmpty(pathItemList)) {
-                argValueCommonPathItemList.addAll(pathItemList);
-            }
+            argValueCommonPathItemList.addAll(pathItemList);
             return argValueCommonPathItemList;
         }
     }

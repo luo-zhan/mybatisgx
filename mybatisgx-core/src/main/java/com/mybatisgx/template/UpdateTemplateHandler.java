@@ -15,6 +15,7 @@ import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UpdateTemplateHandler {
@@ -73,7 +74,7 @@ public class UpdateTemplateHandler {
                         this.setValue(methodInfo, columnInfo, paramValuePathItemList, setTrimElement);
                     } else {
                         for (ColumnInfo columnInfoComposite : columnInfoComposites) {
-                            List<String> paramValuePathItemList = this.getParamValuePathItemList(entityParamInfo, columnInfo, columnInfoComposite);
+                            List<String> paramValuePathItemList = this.getParamValuePathItemList(entityParamInfo, null, columnInfoComposite);
                             this.setValue(methodInfo, columnInfoComposite, paramValuePathItemList, setTrimElement);
                         }
                     }
@@ -88,16 +89,8 @@ public class UpdateTemplateHandler {
                         for (ForeignKeyInfo inverseForeignKeyColumnInfo : relationColumnInfo.getInverseForeignKeyInfoList()) {
                             ColumnInfo foreignKeyColumnInfo = inverseForeignKeyColumnInfo.getColumnInfo();
                             ColumnInfo referencedColumnInfo = inverseForeignKeyColumnInfo.getReferencedColumnInfo();
-                            List<ColumnInfo> referencedColumnInfoComposites = referencedColumnInfo.getComposites();
-                            if (ObjectUtils.isEmpty(referencedColumnInfoComposites)) {
-                                List<String> paramValuePathItemList = this.getParamValuePathItemList(entityParamInfo, referencedColumnInfo, null, relationColumnInfo);
-                                this.setValue(methodInfo, foreignKeyColumnInfo, paramValuePathItemList, setTrimElement);
-                            } else {
-                                for (ColumnInfo referencedColumnInfoComposite : referencedColumnInfoComposites) {
-                                    List<String> paramValuePathItemList = this.getParamValuePathItemList(entityParamInfo, referencedColumnInfo, referencedColumnInfoComposite, relationColumnInfo);
-                                    this.setValue(methodInfo, foreignKeyColumnInfo, paramValuePathItemList, setTrimElement);
-                                }
-                            }
+                            List<String> paramValuePathItemList = this.getParamValuePathItemList(entityParamInfo, relationColumnInfo, referencedColumnInfo);
+                            this.setValue(methodInfo, foreignKeyColumnInfo, paramValuePathItemList, setTrimElement);
                         }
                     }
                 }
@@ -140,27 +133,25 @@ public class UpdateTemplateHandler {
             return methodParamInfo.getColumnInfoList();
         }
 
-        protected List<String> getParamValuePathItemList(MethodParamInfo methodParamInfo, ColumnInfo columnInfo, ColumnInfo columnInfoComposite) {
-            return this.getParamValuePathItemList(methodParamInfo, columnInfo, columnInfoComposite, null);
+        protected List<String> getParamValuePathItemList(MethodParamInfo methodParamInfo, ColumnInfo columnInfo, ColumnInfo leafColumnInfo) {
+            List<String> argValueCommonPathItemList = new ArrayList(5);
+            if (columnInfo != null) {
+                argValueCommonPathItemList.addAll(columnInfo.getJavaColumnNamePathList());
+            }
+            if (leafColumnInfo != null) {
+                argValueCommonPathItemList.addAll(leafColumnInfo.getJavaColumnNamePathList());
+            }
+            return argValueCommonPathItemList;
         }
-
-        abstract protected List<String> getParamValuePathItemList(MethodParamInfo methodParamInfo, ColumnInfo columnInfo, ColumnInfo columnInfoComposite, ColumnInfo relationColumnInfo);
     }
 
     private static class SimpleUpdateHandler extends AbstractUpdateHandler {
 
         @Override
-        protected List<String> getParamValuePathItemList(MethodParamInfo methodParamInfo, ColumnInfo columnInfo, ColumnInfo columnInfoComposite, ColumnInfo relationColumnInfo) {
+        protected List<String> getParamValuePathItemList(MethodParamInfo methodParamInfo, ColumnInfo columnInfo, ColumnInfo leafColumnInfo) {
             List<String> argValueCommonPathItemList = Lists.newArrayList(methodParamInfo.getArgValueCommonPathItemList());
-            if (relationColumnInfo != null) {
-                argValueCommonPathItemList.add(relationColumnInfo.getJavaColumnName());
-            }
-            if (columnInfo != null) {
-                argValueCommonPathItemList.add(columnInfo.getJavaColumnName());
-            }
-            if (columnInfoComposite != null) {
-                argValueCommonPathItemList.add(columnInfoComposite.getJavaColumnName());
-            }
+            List<String> pathItemList = super.getParamValuePathItemList(methodParamInfo, columnInfo, leafColumnInfo);
+            argValueCommonPathItemList.addAll(pathItemList);
             return argValueCommonPathItemList;
         }
     }
@@ -168,19 +159,12 @@ public class UpdateTemplateHandler {
     private static class BatchUpdateHandler extends AbstractUpdateHandler {
 
         @Override
-        protected List<String> getParamValuePathItemList(MethodParamInfo methodParamInfo, ColumnInfo columnInfo, ColumnInfo columnInfoComposite, ColumnInfo relationColumnInfo) {
+        protected List<String> getParamValuePathItemList(MethodParamInfo methodParamInfo, ColumnInfo columnInfo, ColumnInfo leafColumnInfo) {
             // int updateBatchById(@BatchData List<ENTITY> entityList, @BatchSize int batchSize);
             String batchItemName = methodParamInfo.getBatchItemName();
             List<String> argValueCommonPathItemList = Lists.newArrayList(batchItemName);
-            if (relationColumnInfo != null) {
-                argValueCommonPathItemList.add(relationColumnInfo.getJavaColumnName());
-            }
-            if (columnInfo != null) {
-                argValueCommonPathItemList.add(columnInfo.getJavaColumnName());
-            }
-            if (columnInfoComposite != null) {
-                argValueCommonPathItemList.add(columnInfoComposite.getJavaColumnName());
-            }
+            List<String> pathItemList = super.getParamValuePathItemList(methodParamInfo, columnInfo, leafColumnInfo);
+            argValueCommonPathItemList.addAll(pathItemList);
             return argValueCommonPathItemList;
         }
     }
