@@ -527,15 +527,15 @@ public class ColumnInfoHandler {
 
         /**
          * 把关联字段转成普通表字段
-         * @param relationColumnInfo
+         * @param inverseForeignKeyColumnInfo
          * @return
          */
-        private ColumnInfo relationColumnInfoToColumnInfo(ColumnInfo relationColumnInfo) {
+        private ColumnInfo relationColumnInfoToColumnInfo(ColumnInfo inverseForeignKeyColumnInfo) {
             // 解决关联字段单独作为条件查询
             ColumnInfo columnInfo = new ColumnInfo();
-            columnInfo.setColumn(relationColumnInfo.getColumn());
-            columnInfo.setJavaColumnName(relationColumnInfo.getJavaColumnName());
-            columnInfo.setDbColumnName(relationColumnInfo.getDbColumnName());
+            columnInfo.setColumn(inverseForeignKeyColumnInfo.getColumn());
+            columnInfo.setJavaColumnName(inverseForeignKeyColumnInfo.getJavaColumnName());
+            columnInfo.setDbColumnName(inverseForeignKeyColumnInfo.getDbColumnName());
             columnInfo.setTypeCategory(TypeCategory.SIMPLE);
             return columnInfo;
         }
