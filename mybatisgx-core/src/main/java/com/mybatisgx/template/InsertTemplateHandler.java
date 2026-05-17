@@ -154,14 +154,8 @@ public class InsertTemplateHandler {
                     if (mappedByRelationColumnInfo == null) {
                         for (ForeignKeyInfo inverseForeignKeyColumnInfo : relationColumnInfo.getInverseForeignKeyInfoList()) {
                             ColumnInfo referencedColumnInfo = inverseForeignKeyColumnInfo.getReferencedColumnInfo();
-                            if (referencedColumnInfo.getJavaColumnNamePathList().size() == 1) {
-                                List<String> paramValuePathItemList = this.getParamValuePathItemList(entityParamInfo, relationColumnInfo, null);
-                                this.setValue(methodInfo, referencedColumnInfo, paramValuePathItemList, javaTrimElement);
-                            }
-                            if (referencedColumnInfo.getJavaColumnNamePathList().size() > 1) {
-                                List<String> paramValuePathItemList = this.getParamValuePathItemList(entityParamInfo, relationColumnInfo, referencedColumnInfo);
-                                this.setValue(methodInfo, referencedColumnInfo, paramValuePathItemList, javaTrimElement);
-                            }
+                            List<String> paramValuePathItemList = this.getParamValuePathItemList(entityParamInfo, relationColumnInfo, referencedColumnInfo);
+                            this.setValue(methodInfo, referencedColumnInfo, paramValuePathItemList, javaTrimElement);
                         }
                     }
                 }
