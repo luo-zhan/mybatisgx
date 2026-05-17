@@ -282,11 +282,10 @@ public class WhereTemplateHandler {
          *     id1 = #{multiId.id1}
          *     code = #{code}
          * </code>
-         * @param columnInfo
          * @param columnInfoComposite
          * @return
          */
-        protected List<String> getParamValuePathItemList(ColumnInfo columnInfo, ColumnInfo columnInfoComposite) {
+        protected List<String> getParamValuePathItemList(ColumnInfo columnInfoComposite) {
             List<String> argValueCommonPathItemList = Lists.newArrayList(methodParamInfo.getArgValueCommonPathItemList());
             if (columnInfoComposite != null) {
                 argValueCommonPathItemList.add(columnInfoComposite.getJavaColumnName());
@@ -322,13 +321,13 @@ public class WhereTemplateHandler {
 
         @Override
         public WhereItemContext handleSimpleTypeParam(ColumnInfo columnInfo) {
-            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfo, null);
+            List<String> paramValuePathItemList = this.getParamValuePathItemList(null);
             return this.buildWhereItemContext(columnInfo, paramValuePathItemList);
         }
 
         @Override
         public WhereItemContext handleComplexTypeParam(ColumnInfo columnInfo, ColumnInfo columnInfoComposite) {
-            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfo, columnInfoComposite);
+            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfoComposite);
             return this.buildWhereItemContext(columnInfoComposite, paramValuePathItemList);
         }
 
@@ -406,19 +405,19 @@ public class WhereTemplateHandler {
 
         @Override
         public WhereItemContext handleSimpleTypeParam(ColumnInfo columnInfo) {
-            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfo, null);
+            List<String> paramValuePathItemList = this.getParamValuePathItemList(null);
             return this.buildWhereItemContext(columnInfo, paramValuePathItemList);
         }
 
         @Override
         public WhereItemContext handleComplexTypeParam(ColumnInfo columnInfo, ColumnInfo columnInfoComposite) {
-            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfo, columnInfoComposite);
+            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfoComposite);
             return this.buildWhereItemContext(columnInfoComposite, paramValuePathItemList);
         }
 
         @Override
         public WhereItemContext handleRelationSimpleTypeParam(RelationColumnInfo relationColumnInfo, ForeignKeyInfo foreignKeyInfo) {
-            List<String> paramValuePathItemList = this.getParamValuePathItemList(relationColumnInfo, foreignKeyInfo.getReferencedColumnInfo());
+            List<String> paramValuePathItemList = this.getParamValuePathItemList(foreignKeyInfo.getReferencedColumnInfo());
             return this.buildWhereItemContext(foreignKeyInfo.getColumnInfo(), paramValuePathItemList);
         }
 
@@ -448,19 +447,19 @@ public class WhereTemplateHandler {
 
         @Override
         public WhereItemContext handleSimpleTypeParam(ColumnInfo columnInfo) {
-            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfo, null);
+            List<String> paramValuePathItemList = this.getParamValuePathItemList(null);
             return this.buildWhereItemContext(columnInfo, paramValuePathItemList);
         }
 
         @Override
         public WhereItemContext handleComplexTypeParam(ColumnInfo columnInfo, ColumnInfo columnInfoComposite) {
-            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfo, columnInfoComposite);
+            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfoComposite);
             return this.buildWhereItemContext(columnInfoComposite, paramValuePathItemList);
         }
 
         @Override
         public WhereItemContext handleRelationSimpleTypeParam(RelationColumnInfo relationColumnInfo, ForeignKeyInfo foreignKeyInfo) {
-            List<String> paramValuePathItemList = this.getParamValuePathItemList(relationColumnInfo, foreignKeyInfo.getReferencedColumnInfo());
+            List<String> paramValuePathItemList = this.getParamValuePathItemList(foreignKeyInfo.getReferencedColumnInfo());
             return this.buildWhereItemContext(foreignKeyInfo.getColumnInfo(), paramValuePathItemList);
         }
 
@@ -495,19 +494,19 @@ public class WhereTemplateHandler {
 
         @Override
         public WhereItemContext handleSimpleTypeParam(ColumnInfo columnInfo) {
-            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfo, null);
+            List<String> paramValuePathItemList = this.getParamValuePathItemList(null);
             return this.buildWhereItemContext(columnInfo, paramValuePathItemList);
         }
 
         @Override
         public WhereItemContext handleComplexTypeParam(ColumnInfo columnInfo, ColumnInfo columnInfoComposite) {
-            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfo, columnInfoComposite);
+            List<String> paramValuePathItemList = this.getParamValuePathItemList(columnInfoComposite);
             return this.buildWhereItemContext(columnInfoComposite, paramValuePathItemList);
         }
 
         @Override
         public WhereItemContext handleRelationSimpleTypeParam(RelationColumnInfo relationColumnInfo, ForeignKeyInfo foreignKeyInfo) {
-            List<String> paramValuePathItemList = this.getParamValuePathItemList(relationColumnInfo, foreignKeyInfo.getReferencedColumnInfo());
+            List<String> paramValuePathItemList = this.getParamValuePathItemList(foreignKeyInfo.getReferencedColumnInfo());
             return this.buildWhereItemContext(foreignKeyInfo.getColumnInfo(), paramValuePathItemList);
         }
 
