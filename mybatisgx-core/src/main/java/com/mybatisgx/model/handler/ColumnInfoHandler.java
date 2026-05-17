@@ -533,8 +533,15 @@ public class ColumnInfoHandler {
                     if (relationColumnInfo.getRelationType() != RelationType.MANY_TO_MANY) {
                         for (ForeignKeyInfo inverseForeignKeyColumn : relationColumnInfo.getInverseForeignKeyInfoList()) {
                             EntityInfo relationColumnEntityInfo = EntityInfoContextHolder.get(relationColumnInfo.getJavaType());
+
                             String referencedColumnName = inverseForeignKeyColumn.getReferencedColumnName();
                             ColumnInfo referencedColumnInfo = relationColumnEntityInfo.getColumnInfo(referencedColumnName);
+
+                            // 复制主键基础信息到关联字段中
+                            ColumnInfo columnInfo = inverseForeignKeyColumn.getColumnInfo();
+                            this.copyReferencedColumnInfoToColumnInfo(referencedColumnInfo, columnInfo);
+
+                            inverseForeignKeyColumn.setColumnInfo(columnInfo);
                             inverseForeignKeyColumn.setReferencedColumnInfo(referencedColumnInfo);
                         }
                     } else {
@@ -553,6 +560,12 @@ public class ColumnInfoHandler {
                     }
                 }
             }
+        }
+
+        private void copyReferencedColumnInfoToColumnInfo(ColumnInfo referencedColumnInfo, ColumnInfo columnInfo) {
+            columnInfo.setJavaType(referencedColumnInfo.getJavaType());
+            columnInfo.setTypeCategory(referencedColumnInfo.getTypeCategory());
+            columnInfo.setDbTypeName(referencedColumnInfo.getDbTypeName());
         }
 
         private ColumnInfo validateEntityRelation(RelationColumnInfo relationColumnInfo, String mappedBy) {
