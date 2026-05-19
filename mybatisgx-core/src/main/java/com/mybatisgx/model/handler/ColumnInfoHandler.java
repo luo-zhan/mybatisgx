@@ -342,6 +342,13 @@ public class ColumnInfoHandler {
     }
 
     private void processPropertyMethod(Map<String, PropertyDescriptor> getterMethodMap, Map<String, PropertyDescriptor> setterMethodMap, ColumnInfo columnInfo) {
+        // 简单类型字段没有生成值注解和关系字段生成 LambdaAccessor 访问器
+        if (TypeUtils.typeNotEquals(columnInfo, RelationColumnInfo.class)) {
+            if ((ObjectUtils.isEmpty(columnInfo.getComposites()) && columnInfo.getGenerateValue() == null)) {
+                return;
+            }
+        }
+
         String javaColumnName = columnInfo.getJavaColumnName();
         PropertyDescriptor getterPropertyDescriptor = getterMethodMap.get(javaColumnName);
         PropertyDescriptor setterPropertyDescriptor = setterMethodMap.get(javaColumnName);
@@ -351,9 +358,12 @@ public class ColumnInfoHandler {
         if (setterPropertyDescriptor == null) {
             throw new MybatisgxException("字段 %s 不存在set方法", javaColumnName);
         }
-        columnInfo.setObjectFactory(LambdaAccessorFactory.createObjectFactory(columnInfo.getJavaType()));
-        columnInfo.setPropertyGetter(LambdaAccessorFactory.createGetter(getterPropertyDescriptor.getReadMethod()));
-        columnInfo.setPropertySetter(LambdaAccessorFactory.createSetter(setterPropertyDescriptor.getWriteMethod()));
+
+        LambdaAccessor lambdaAccessor = new LambdaAccessor();
+        lambdaAccessor.setObjectFactory(LambdaAccessorFactory.createObjectFactory(columnInfo.getJavaType()));
+        lambdaAccessor.setPropertyGetter(LambdaAccessorFactory.createGetter(getterPropertyDescriptor.getReadMethod()));
+        lambdaAccessor.setPropertySetter(LambdaAccessorFactory.createSetter(setterPropertyDescriptor.getWriteMethod()));
+        columnInfo.setLambdaAccessor(lambdaAccessor);
     }
 
     public static class ColumnMap {

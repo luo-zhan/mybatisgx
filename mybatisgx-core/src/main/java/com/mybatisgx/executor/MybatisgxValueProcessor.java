@@ -142,7 +142,7 @@ public class MybatisgxValueProcessor {
                 if (current == null) {
                     return null;
                 }
-                current = chain.get(i).getValue(current);
+                current = chain.get(i).getLambdaAccessor().getValue(current);
             }
 
             return current;
@@ -157,16 +157,16 @@ public class MybatisgxValueProcessor {
             // 处理中间链路对象
             for (int i = 0; i < lastIndex; i++) {
                 ColumnInfo currentColumn = chain.get(i);
-                Object next = currentColumn.getValue(current);
+                Object next = currentColumn.getLambdaAccessor().getValue(current);
 
                 if (next == null) {
-                    ObjectFactory<?> factory = currentColumn.getObjectFactory();
+                    ObjectFactory<?> factory = currentColumn.getLambdaAccessor().getObjectFactory();
                     if (factory == null) {
                         throw new MybatisgxException("Cannot instantiate property: " + currentColumn.getField().getName());
                     }
 
                     next = factory.create();
-                    currentColumn.setValue(current, next);
+                    currentColumn.getLambdaAccessor().setValue(current, next);
                 }
 
                 current = next;
@@ -176,12 +176,12 @@ public class MybatisgxValueProcessor {
             ColumnInfo targetColumn = chain.get(lastIndex);
 
             // 已有值则跳过
-            Object existingValue = targetColumn.getValue(current);
+            Object existingValue = targetColumn.getLambdaAccessor().getValue(current);
             if (existingValue != null) {
                 return;
             }
 
-            targetColumn.setValue(current, value);
+            targetColumn.getLambdaAccessor().setValue(current, value);
         }
     }
 }

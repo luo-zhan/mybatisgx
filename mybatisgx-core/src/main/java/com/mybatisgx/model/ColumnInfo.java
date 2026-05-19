@@ -1,8 +1,6 @@
 package com.mybatisgx.model;
 
 import com.mybatisgx.annotation.*;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
@@ -26,17 +24,9 @@ public class ColumnInfo {
      */
     private Field field;
     /**
-     * 对象工厂
+     * 访问器
      */
-    private ObjectFactory<Object> objectFactory;
-    /**
-     * 字段getter方法
-     */
-    private PropertyGetter<Object, Object> propertyGetter;
-    /**
-     * 字段getter方法
-     */
-    private PropertySetter<Object, Object> propertySetter;
+    private LambdaAccessor lambdaAccessor;
     /**
      * 类型类别
      */
@@ -134,28 +124,12 @@ public class ColumnInfo {
         this.field = field;
     }
 
-    public ObjectFactory<Object> getObjectFactory() {
-        return objectFactory;
+    public LambdaAccessor getLambdaAccessor() {
+        return lambdaAccessor;
     }
 
-    public void setObjectFactory(ObjectFactory<Object> objectFactory) {
-        this.objectFactory = objectFactory;
-    }
-
-    public PropertyGetter<Object, Object> getPropertyGetter() {
-        return propertyGetter;
-    }
-
-    public void setPropertyGetter(PropertyGetter<Object, Object> propertyGetter) {
-        this.propertyGetter = propertyGetter;
-    }
-
-    public PropertySetter<Object, Object> getPropertySetter() {
-        return propertySetter;
-    }
-
-    public void setPropertySetter(PropertySetter<Object, Object> propertySetter) {
-        this.propertySetter = propertySetter;
+    public void setLambdaAccessor(LambdaAccessor lambdaAccessor) {
+        this.lambdaAccessor = lambdaAccessor;
     }
 
     public TypeCategory getTypeCategory() {
@@ -326,14 +300,6 @@ public class ColumnInfo {
 
     public void setGenerateValue(GeneratedValue generatedValue) {
         this.generatedValue = generatedValue;
-    }
-
-    public Object getValue(Object entity) {
-        return propertyGetter.get(entity);
-    }
-
-    public void setValue(Object entity, Object value) {
-        propertySetter.set(entity, value);
     }
 
     public static class Builder {

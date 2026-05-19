@@ -58,7 +58,7 @@ public class MybatisgxResultSetHandler extends PatchDefaultResultSetHandler {
                     Object parameterObject = batchResultLoader.getParameterObject();
                     EntityInfo entityInfo = configuration.getEntityInfo(parameterObject.getClass());
                     ColumnInfo columnInfo = entityInfo.getColumnInfo(batchResultLoader.getPropertyMapping().getProperty());
-                    columnInfo.setValue(parameterObject, linkRightValue);
+                    columnInfo.getLambdaAccessor().setValue(parameterObject, linkRightValue);
                 }
             }
         }
