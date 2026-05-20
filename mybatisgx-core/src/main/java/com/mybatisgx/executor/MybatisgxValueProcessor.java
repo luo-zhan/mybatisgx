@@ -10,7 +10,6 @@ import com.mybatisgx.spi.ValueProcessor;
 import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.reflection.MetaObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,9 +82,9 @@ public class MybatisgxValueProcessor {
 
         public abstract void handle(ValueProcessPrepareContext context, ColumnInfo columnInfo, Object parameterObject, BoundSql boundSql);
 
-        protected Object valueHandle(MethodCommandType commandType, ColumnInfo columnInfo, Object originalValue, MetaObject entityMetaObject) {
+        protected Object valueHandle(MethodCommandType commandType, ColumnInfo columnInfo, Object originalValue, Object parameterObject) {
             FieldInfo fieldInfo = new FieldInfo(columnInfo);
-            ValueProcessContext context = new DefaultValueProcessContext(commandType, fieldInfo, originalValue, entityMetaObject);
+            ValueProcessContext context = new DefaultValueProcessContext(commandType, fieldInfo, originalValue, parameterObject);
             List<ValueProcessor> valueProcessors = DaoMethodManager.get(columnInfo.getGenerateValue().value());
             for (ValueProcessor valueProcessor : valueProcessors) {
                 if (valueProcessor.supports(fieldInfo)) {
@@ -109,7 +108,7 @@ public class MybatisgxValueProcessor {
             EntityInfo entityInfo = methodInfo.getMapperInfo().getEntityInfo();
             LogicDeleteIdColumnInfo logicDeleteIdColumnInfo = (LogicDeleteIdColumnInfo) entityInfo.getLogicDeleteIdColumnInfo();
             if (logicDeleteIdColumnInfo != null) {
-                Object value = this.valueHandle(commandType, columnInfo, null, null);
+                Object value = this.valueHandle(commandType, columnInfo, null, parameterObject);
                 LogicDeleteId logicDeleteId = logicDeleteIdColumnInfo.getLogicDeleteId();
                 boundSql.setAdditionalParameter(logicDeleteId.value(), value);
             }
@@ -122,7 +121,6 @@ public class MybatisgxValueProcessor {
         public void handle(ValueProcessPrepareContext context, ColumnInfo columnInfo, Object parameterObject, BoundSql boundSql) {
             MethodInfo methodInfo = context.getMethodInfo();
             MethodCommandType commandType = context.getCommandType();
-            MetaObject metaObject = context.getMetaObject();
 
             Class<?> entityClass = methodInfo.getMapperInfo().getEntityClass();
             if (!entityClass.isAssignableFrom(parameterObject.getClass())) {
@@ -130,7 +128,7 @@ public class MybatisgxValueProcessor {
             }
 
             Object originalValue = this.getValueByChain(parameterObject, columnInfo);
-            Object value = this.valueHandle(commandType, columnInfo, originalValue, metaObject);
+            Object value = this.valueHandle(commandType, columnInfo, originalValue, parameterObject);
             this.setValueByChain(parameterObject, columnInfo, value);
         }
 
