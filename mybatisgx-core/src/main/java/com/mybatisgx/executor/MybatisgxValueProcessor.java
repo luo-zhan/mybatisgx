@@ -118,14 +118,7 @@ public class MybatisgxValueProcessor {
 
         @Override
         public void handle(ValueProcessPrepareContext context, ColumnInfo columnInfo, Object parameterObject, BoundSql boundSql) {
-            MethodInfo methodInfo = context.getMethodInfo();
             MethodCommandType commandType = context.getCommandType();
-
-            Class<?> entityClass = methodInfo.getMapperInfo().getEntityClass();
-            if (!entityClass.isAssignableFrom(parameterObject.getClass())) {
-                return;
-            }
-
             Object originalValue = this.getValueByChain(parameterObject, columnInfo);
             Object value = this.valueHandle(commandType, columnInfo, originalValue, parameterObject);
             this.setValueByChain(parameterObject, columnInfo, value);
