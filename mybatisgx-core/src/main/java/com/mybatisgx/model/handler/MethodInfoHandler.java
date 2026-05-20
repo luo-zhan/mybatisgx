@@ -105,6 +105,10 @@ public class MethodInfoHandler {
             methodInfo.setMethodParamInfoList(methodParamContext.getMethodParamInfoList());
             methodInfo.setMethodReturnInfo(methodReturnInfo);
 
+            // 预处理该方法是否需要值生成处理
+            boolean isValueProcessor = this.isValueProcessor(methodInfo);
+            methodInfo.setValueProcessor(isValueProcessor);
+
             // 条件解析
             this.methodConditionParse(methodInfo);
 
@@ -287,6 +291,20 @@ public class MethodInfoHandler {
         }
 
         return methodReturnInfo;
+    }
+
+    private boolean isValueProcessor(MethodInfo methodInfo) {
+        MethodCommandType methodCommandType = methodInfo.getMethodCommandType();
+        if (methodCommandType == MethodCommandType.SELECT || methodCommandType == MethodCommandType.DELETE) {
+            return false;
+        }
+        // 逻辑删除可能没有实体参数，但是新增和修改必须有实体参数
+        if (methodCommandType != MethodCommandType.LOGIC_DELETE) {
+            if (methodInfo.getEntityParamInfo() == null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

@@ -12,7 +12,7 @@ public class ValueProcessPrepareContext {
 
     private MethodInfo methodInfo;
 
-    private boolean isProcess = false;
+    private boolean isProcess;
 
     private MethodCommandType commandType;
 

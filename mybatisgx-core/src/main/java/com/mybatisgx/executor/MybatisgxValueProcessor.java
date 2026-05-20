@@ -35,8 +35,8 @@ public class MybatisgxValueProcessor {
 
     public ValueProcessPrepareContext prepare(MappedStatement ms, Object parameterObject) {
         MethodInfo methodInfo = DaoMethodManager.getMethodInfo(ms);
-        boolean isProcess = this.isProcess(methodInfo, parameterObject);
-        return new ValueProcessPrepareContext(isProcess, methodInfo);
+        boolean isValueProcessor = this.isValueProcessor(methodInfo, parameterObject);
+        return new ValueProcessPrepareContext(isValueProcessor, methodInfo);
     }
 
     public Object process(ValueProcessPrepareContext context, Object parameterObject, BoundSql boundSql) {
@@ -51,21 +51,11 @@ public class MybatisgxValueProcessor {
         return unwrapParameterObject;
     }
 
-    private boolean isProcess(MethodInfo methodInfo, Object parameterObject) {
+    private boolean isValueProcessor(MethodInfo methodInfo, Object parameterObject) {
         if (parameterObject == null || methodInfo == null) {
             return false;
         }
-        MethodCommandType methodCommandType = methodInfo.getMethodCommandType();
-        if (methodCommandType == MethodCommandType.SELECT || methodCommandType == MethodCommandType.DELETE) {
-            return false;
-        }
-        // 逻辑删除可能没有实体参数，但是新增和修改必须有实体参数
-        if (methodCommandType != MethodCommandType.LOGIC_DELETE) {
-            if (methodInfo.getEntityParamInfo() == null) {
-                return false;
-            }
-        }
-        return true;
+        return methodInfo.isValueProcessor();
     }
 
     private Object unwrapParameterObject(MethodInfo methodInfo, Object parameterObject) {

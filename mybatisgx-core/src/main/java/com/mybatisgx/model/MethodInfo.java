@@ -52,6 +52,10 @@ public class MethodInfo {
      */
     private Boolean isBatch = false;
     /**
+     * 是否需要值处理
+     */
+    private boolean isValueProcessor = false;
+    /**
      * 批量参数信息
      */
     private BatchParamInfo batchParamInfo;
@@ -167,6 +171,14 @@ public class MethodInfo {
 
     public void setBatch(Boolean batch) {
         isBatch = batch;
+    }
+
+    public boolean isValueProcessor() {
+        return isValueProcessor;
+    }
+
+    public void setValueProcessor(boolean valueProcessor) {
+        isValueProcessor = valueProcessor;
     }
 
     public BatchParamInfo getBatchParamInfo() {
