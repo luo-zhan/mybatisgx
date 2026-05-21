@@ -38,9 +38,8 @@ public class UpdateTemplateHandler {
         updateElement.addAttribute("id", methodInfo.getMethodName());
         updateElement.addText(String.format("update %s", entityInfo.getTableName()));
 
-        Element setElement = updateElement.addElement("set");
-        Element setTrimElement = setElement.addElement("trim");
-        setTrimElement.addAttribute("suffixOverrides", ",");
+        Element setTrimElement = MybatisXmlHelper.buildTrimElement("set", "", ",");
+        updateElement.add(setTrimElement);
 
         AbstractUpdateHandler abstractUpdateHandler = this.getAbstractUpdateHandler(methodInfo);
         abstractUpdateHandler.setValue(methodInfo, setTrimElement);
