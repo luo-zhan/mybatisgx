@@ -12,14 +12,14 @@ public class Org extends IdBaseEntity<Integer> {
 
     private String code;
 
-    /*@OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "org_id")
     @Fetch(FetchMode.SIMPLE)
-    private List<User> userList;*/
-
-    @Fetch(FetchMode.SIMPLE)
-    @OneToMany(mappedBy = "org", fetch = FetchType.EAGER)
     private List<User> userList;
+
+    /*@Fetch(FetchMode.SIMPLE)
+    @OneToMany(mappedBy = "org", fetch = FetchType.EAGER)
+    private List<User> userList;*/
 
     public Org() {
     }
@@ -37,11 +37,11 @@ public class Org extends IdBaseEntity<Integer> {
         this.code = code;
     }
 
-    public List<User> getUserList() {
+    /*public List<User> getUserList() {
         return userList;
     }
 
     public void setUserList(List<User> userList) {
         this.userList = userList;
-    }
+    }*/
 }
