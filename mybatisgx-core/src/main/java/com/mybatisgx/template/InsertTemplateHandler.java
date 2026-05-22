@@ -173,6 +173,12 @@ public class InsertTemplateHandler {
                 trimElement.addText(valueExpression);
                 return;
             }
+            if (TypeUtils.typeEquals(columnInfo, LogicDeleteIdColumnInfo.class)) {
+                LogicDeleteIdColumnInfo logicDeleteIdColumnInfo = (LogicDeleteIdColumnInfo) columnInfo;
+                String valueExpression = String.format("#{%s%s},", logicDeleteIdColumnInfo.getLogicDeleteId().value(), buildTypeHandler(columnInfo));
+                trimElement.addText(valueExpression);
+                return;
+            }
             String testExpression = MybatisXmlHelper.getTestExpression(paramValuePathItemList);
             String valueExpression = MybatisXmlHelper.getValueExpression(paramValuePathItemList, columnInfo);
             Element trimOrIfElement = MybatisXmlHelper.buildTrimOrIfElement(methodInfo, columnInfo, trimElement, testExpression);
