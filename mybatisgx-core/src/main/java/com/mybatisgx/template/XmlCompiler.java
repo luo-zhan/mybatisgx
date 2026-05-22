@@ -4,8 +4,6 @@ import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.Text;
 
-import java.util.List;
-
 /**
  * 提前编译不需要动态处理的xml节点，以提升性能
  * @author 薛承城
@@ -13,15 +11,13 @@ import java.util.List;
  */
 public class XmlCompiler {
 
-    public static String compile(Element trimElement) {
+    public static String trim(Element trimElement) {
         String prefix = trimElement.attributeValue("prefix");
         String suffix = trimElement.attributeValue("suffix");
         String suffixOverrides = trimElement.attributeValue("suffixOverrides");
 
         StringBuilder contentBuilder = new StringBuilder();
-        List<Node> nodes = trimElement.content();
-
-        for (Node node : nodes) {
+        for (Node node : trimElement.content()) {
             if (node instanceof Text) {
                 contentBuilder.append(node.getText());
             }

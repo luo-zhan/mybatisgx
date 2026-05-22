@@ -50,7 +50,7 @@ public class InsertTemplateHandler {
         if (methodInfo.getDynamic()) {
             insertElement.add(dbTrimElement);
         } else {
-            String dbTrimElementString = String.format(" %s", XmlCompiler.compile(dbTrimElement));
+            String dbTrimElementString = String.format(" %s", XmlCompiler.trim(dbTrimElement));
             insertElement.addText(dbTrimElementString);
         }
 
@@ -59,7 +59,7 @@ public class InsertTemplateHandler {
         if (methodInfo.getDynamic()) {
             insertElement.add(javaTrimElement);
         } else {
-            String javaTrimElementString = String.format(" %s", XmlCompiler.compile(javaTrimElement));
+            String javaTrimElementString = String.format(" %s", XmlCompiler.trim(javaTrimElement));
             insertElement.addText(javaTrimElementString);
         }
 
