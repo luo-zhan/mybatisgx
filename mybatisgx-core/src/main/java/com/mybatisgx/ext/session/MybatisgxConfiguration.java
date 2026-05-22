@@ -50,9 +50,14 @@ public class MybatisgxConfiguration extends Configuration {
     }
 
     @Override
+    public ParameterHandler newParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
+        this.mybatisgxValueProcessor.process(mappedStatement, parameterObject, boundSql);
+        return super.newParameterHandler(mappedStatement, parameterObject, boundSql);
+    }
+
+    @Override
     public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
         StatementHandler statementHandler = super.newStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
-        this.mybatisgxValueProcessor.process(mappedStatement, parameterObject, statementHandler.getBoundSql());
         return statementHandler;
     }
 

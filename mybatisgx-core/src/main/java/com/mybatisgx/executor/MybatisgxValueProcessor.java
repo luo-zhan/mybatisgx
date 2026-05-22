@@ -52,7 +52,7 @@ public class MybatisgxValueProcessor {
     }
 
     private boolean isValueProcessor(MethodInfo methodInfo, Object parameterObject) {
-        if (parameterObject == null || methodInfo == null) {
+        if (methodInfo == null || parameterObject == null) {
             return false;
         }
         return methodInfo.isValueProcessor();
@@ -107,6 +107,10 @@ public class MybatisgxValueProcessor {
         @Override
         public void handle(MethodInfo methodInfo, ColumnInfo columnInfo, Object parameterObject, BoundSql boundSql) {
             MethodCommandType commandType = methodInfo.getMethodCommandType();
+            MethodParamInfo entityParamInfo = methodInfo.getEntityParamInfo();
+            if (entityParamInfo == null || !entityParamInfo.getType().equals(parameterObject.getClass())) {
+                return;
+            }
             Object originalValue = this.getValueByChain(parameterObject, columnInfo);
             Object value = this.valueHandle(commandType, columnInfo, originalValue, parameterObject);
             this.setValueByChain(parameterObject, columnInfo, value);
