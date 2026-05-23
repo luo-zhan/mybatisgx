@@ -47,20 +47,16 @@ public class InsertTemplateHandler {
 
         Element dbTrimElement = MybatisXmlHelper.buildTrimElement("(", ")", ",");
         insertHandler.setColumn(methodInfo, dbTrimElement);
-        if (methodInfo.getDynamic()) {
-            insertElement.add(dbTrimElement);
-        } else {
-            String dbTrimElementString = String.format(" %s", XmlCompiler.trim(dbTrimElement));
-            insertElement.addText(dbTrimElementString);
+        insertElement.add(dbTrimElement);
+        if (!methodInfo.getDynamic()) {
+            XmlCompiler.trim(dbTrimElement);
         }
 
         Element javaTrimElement = MybatisXmlHelper.buildTrimElement("values (", ")", ",");
         insertHandler.setValue(methodInfo, javaTrimElement);
-        if (methodInfo.getDynamic()) {
-            insertElement.add(javaTrimElement);
-        } else {
-            String javaTrimElementString = String.format(" %s", XmlCompiler.trim(javaTrimElement));
-            insertElement.addText(javaTrimElementString);
+        insertElement.add(javaTrimElement);
+        if (!methodInfo.getDynamic()) {
+            XmlCompiler.trim(javaTrimElement);
         }
 
         return document.asXML();

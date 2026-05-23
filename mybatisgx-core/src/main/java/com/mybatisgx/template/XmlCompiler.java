@@ -1,8 +1,12 @@
 package com.mybatisgx.template;
 
+import org.apache.commons.lang3.StringUtils;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Node;
-import org.dom4j.Text;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 提前编译不需要动态处理的xml节点，以提升性能
@@ -11,39 +15,56 @@ import org.dom4j.Text;
  */
 public class XmlCompiler {
 
-    public static String trim(Element trimElement) {
+    public static void trim(Element trimElement) {
+        Element parent = trimElement.getParent();
+        if (parent == null) {
+            return;
+        }
+
         String prefix = trimElement.attributeValue("prefix");
         String suffix = trimElement.attributeValue("suffix");
         String suffixOverrides = trimElement.attributeValue("suffixOverrides");
 
-        StringBuilder contentBuilder = new StringBuilder();
-        for (Node node : trimElement.content()) {
-            if (node instanceof Text) {
-                contentBuilder.append(node.getText());
-            }
-            if (node instanceof Element) {
-                contentBuilder.append(node.getText());
-            }
+        String sql = trimElement.getText();
+        if (StringUtils.isBlank(sql)) {
+            sql = "";
         }
+        sql = sql.trim();
 
-        String content = contentBuilder.toString().trim();
-
-        // 去掉最后的 suffixOverrides
-        if (suffixOverrides != null && !suffixOverrides.isEmpty()) {
-            while (content.endsWith(suffixOverrides)) {
-                content = content.substring(0, content.length() - suffixOverrides.length()).trim();
+        // 去除尾部分隔符
+        if (StringUtils.isNotBlank(suffixOverrides)) {
+            while (sql.endsWith(suffixOverrides)) {
+                sql = sql.substring(0, sql.length() - suffixOverrides.length()).trim();
             }
         }
 
-        StringBuilder sql = new StringBuilder();
-        if (prefix != null) {
-            sql.append(prefix);
-        }
-        sql.append(content);
-        if (suffix != null) {
-            sql.append(suffix);
+        // 添加前缀
+        if (StringUtils.isNotBlank(prefix)) {
+            sql = String.format(" %s %s", prefix, sql);
         }
 
-        return sql.toString();
+        // 添加后缀
+        if (StringUtils.isNotBlank(suffix)) {
+            sql = String.format("%s %s", sql, suffix);
+        }
+
+        int index = parent.indexOf(trimElement);
+        parent.remove(trimElement);
+        parent.content().add(index, DocumentHelper.createText(sql));
+    }
+
+    public static void where(Element whereElement) {
+        Element parent = whereElement.getParent();
+        if (parent == null) {
+            return;
+        }
+
+        int index = parent.indexOf(whereElement);
+        List<Node> children = new ArrayList<>(whereElement.content());
+        parent.remove(whereElement);
+        parent.content().add(index++, DocumentHelper.createText(" where "));
+        for (Node child : children) {
+            parent.content().add(index++, child);
+        }
     }
 }

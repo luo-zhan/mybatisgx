@@ -65,6 +65,13 @@ public class UpdateTemplateHandler {
             if (ObjectUtils.isEmpty(tableColumnInfoList)) {
                 throw new MybatisgxException("%s实体表字段不存在", entityParamInfo.getTypeName());
             }
+            this.setValue(methodInfo, entityParamInfo, tableColumnInfoList, setTrimElement);
+            if (!methodInfo.getDynamic()) {
+                XmlCompiler.trim(setTrimElement);
+            }
+        }
+
+        public void setValue(MethodInfo methodInfo, MethodParamInfo entityParamInfo, List<ColumnInfo> tableColumnInfoList, Element setTrimElement) {
             for (ColumnInfo columnInfo : tableColumnInfoList) {
                 if (TypeUtils.typeEquals(columnInfo, IdColumnInfo.class, ColumnInfo.class)) {
                     List<ColumnInfo> columnInfoComposites = columnInfo.getComposites();
@@ -121,6 +128,9 @@ public class UpdateTemplateHandler {
         private void setWhere(Element updateElement, EntityInfo entityInfo, MethodInfo methodInfo) {
             Element whereElement = whereTemplateHandler.execute(entityInfo, methodInfo);
             updateElement.add(whereElement);
+            if (!methodInfo.getDynamic()) {
+                XmlCompiler.where(whereElement);
+            }
         }
 
         private List<ColumnInfo> getTableColumnInfoList(MethodParamInfo methodParamInfo) {
