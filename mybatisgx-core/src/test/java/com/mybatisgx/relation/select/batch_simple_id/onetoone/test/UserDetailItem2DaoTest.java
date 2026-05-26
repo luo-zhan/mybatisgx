@@ -61,13 +61,18 @@ public class UserDetailItem2DaoTest {
 
         for (int i = 0; i < count; i++) {
             User user = fixtureGenerator.createRandomized(User.class);
+            user.setId(null);
+
             UserDetail userDetail = user.getUserDetail();
+            userDetail.setId(null);
             userDetail.setUser(user);
 
             UserDetailItem1 userDetailItem1 = userDetail.getUserDetailItem1();
+            userDetailItem1.setId(null);
             userDetailItem1.setUserDetail(userDetail);
 
             UserDetailItem2 userDetailItem2 = userDetailItem1.getUserDetailItem2();
+            userDetailItem2.setId(null);
             userDetailItem2.setUserDetailItem1(userDetailItem1);
 
             userList.add(user);
