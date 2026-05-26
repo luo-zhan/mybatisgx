@@ -4,6 +4,7 @@ import com.mybatisgx.dao.SimpleDao;
 import com.mybatisgx.entity.MultiId;
 import com.mybatisgx.relation.select.batch_complex_id.onetoone.entity.UserDetail;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface UserDetailDao extends SimpleDao<UserDetail, UserDetail, MultiId> {

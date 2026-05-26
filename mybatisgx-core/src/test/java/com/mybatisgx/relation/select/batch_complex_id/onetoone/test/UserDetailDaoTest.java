@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class UserDaoTest {
+public class UserDetailDaoTest {
 
     private static int count = 10;
     private static UserDao userDao;
@@ -61,8 +61,8 @@ public class UserDaoTest {
             User user = fixtureGenerator.createRandomized(User.class);
             if (i == 0) {
                 MultiId<Long> multiId = new MultiId();
-                multiId.setId1(111111L);
-                multiId.setId2(111111L);
+                multiId.setId1(222111L);
+                multiId.setId2(222111L);
                 user.setMultiId(multiId);
             } else {
                 MultiId<Long> multiId = user.getMultiId();
@@ -73,8 +73,8 @@ public class UserDaoTest {
             UserDetail userDetail = user.getUserDetail();
             if (i == 0) {
                 MultiId<Long> multiId = new MultiId();
-                multiId.setId1(111112L);
-                multiId.setId2(111112L);
+                multiId.setId1(222112L);
+                multiId.setId2(222112L);
                 userDetail.setMultiId(multiId);
             } else {
                 MultiId<Long> multiId = userDetail.getMultiId();
@@ -86,8 +86,8 @@ public class UserDaoTest {
             UserDetailItem1 userDetailItem1 = userDetail.getUserDetailItem1();
             if (i == 0) {
                 MultiId<Long> multiId = new MultiId();
-                multiId.setId1(111113L);
-                multiId.setId2(111113L);
+                multiId.setId1(222113L);
+                multiId.setId2(222113L);
                 userDetailItem1.setMultiId(multiId);
             } else {
                 MultiId<Long> multiId = userDetailItem1.getMultiId();
@@ -99,8 +99,8 @@ public class UserDaoTest {
             UserDetailItem2 userDetailItem2 = userDetailItem1.getUserDetailItem2();
             if (i == 0) {
                 MultiId<Long> multiId = new MultiId();
-                multiId.setId1(111114L);
-                multiId.setId2(111114L);
+                multiId.setId1(222114L);
+                multiId.setId2(222114L);
                 userDetailItem2.setMultiId(multiId);
             } else {
                 MultiId<Long> multiId = userDetailItem2.getMultiId();
@@ -119,20 +119,20 @@ public class UserDaoTest {
     @Test
     public void testFindById() {
         MultiId<Long> multiId = new MultiId();
-        multiId.setId1(111111L);
-        multiId.setId2(111111L);
-        User dbUser = userDao.findById(multiId);
-        Assert.assertNotNull(dbUser);
-
-        User user = userList.get(0);
-        Assert.assertEquals(user.getMultiId().getId1(), dbUser.getMultiId().getId1());
-        Assert.assertEquals(user.getMultiId().getId2(), dbUser.getMultiId().getId2());
-
-        UserDetail dbUserDetail = dbUser.getUserDetail();
+        multiId.setId1(222112L);
+        multiId.setId2(222112L);
+        UserDetail dbUserDetail = userDetailDao.findById(multiId);
         Assert.assertNotNull(dbUserDetail);
+
         UserDetail userDetail = userDetailList.get(0);
         Assert.assertEquals(userDetail.getMultiId().getId1(), dbUserDetail.getMultiId().getId1());
         Assert.assertEquals(userDetail.getMultiId().getId2(), dbUserDetail.getMultiId().getId2());
+
+        User dbUser = dbUserDetail.getUser();
+        Assert.assertNotNull(dbUser);
+        User user = userList.get(0);
+        Assert.assertEquals(user.getMultiId().getId1(), dbUser.getMultiId().getId1());
+        Assert.assertEquals(user.getMultiId().getId2(), dbUser.getMultiId().getId2());
 
         UserDetailItem1 dbUserDetailItem1 = dbUserDetail.getUserDetailItem1();
         Assert.assertNotNull(dbUserDetailItem1);
@@ -149,22 +149,22 @@ public class UserDaoTest {
 
     @Test
     public void testFindList() {
-        List<User> dbUserList = userDao.findList(new User());
-        Assert.assertNotNull(dbUserList);
-        Assert.assertEquals(count, dbUserList.size());
+        List<UserDetail> dbUserDetailList = userDetailDao.findList(new UserDetail());
+        Assert.assertNotNull(dbUserDetailList);
+        Assert.assertEquals(count, dbUserDetailList.size());
 
         for (int i = 0; i < count; i++) {
-            User user = userList.get(i);
-            User dbUser = dbUserList.get(i);
-
-            Assert.assertEquals(user.getMultiId().getId1(), dbUser.getMultiId().getId1());
-            Assert.assertEquals(user.getMultiId().getId2(), dbUser.getMultiId().getId2());
-
-            UserDetail dbUserDetail = dbUser.getUserDetail();
-            Assert.assertNotNull(dbUserDetail);
             UserDetail userDetail = userDetailList.get(i);
+            UserDetail dbUserDetail = dbUserDetailList.get(i);
+
             Assert.assertEquals(userDetail.getMultiId().getId1(), dbUserDetail.getMultiId().getId1());
             Assert.assertEquals(userDetail.getMultiId().getId2(), dbUserDetail.getMultiId().getId2());
+
+            User dbUser = dbUserDetail.getUser();
+            Assert.assertNotNull(dbUser);
+            User user = userList.get(i);
+            Assert.assertEquals(user.getMultiId().getId1(), dbUser.getMultiId().getId1());
+            Assert.assertEquals(user.getMultiId().getId2(), dbUser.getMultiId().getId2());
 
             UserDetailItem1 dbUserDetailItem1 = dbUserDetail.getUserDetailItem1();
             Assert.assertNotNull(dbUserDetailItem1);
@@ -182,17 +182,17 @@ public class UserDaoTest {
 
     @Test
     public void testFindListWithCondition() {
-        User condition = new User();
-        condition.setCode(userList.get(0).getCode());
-        List<User> dbUserList = userDao.findList(condition);
-        Assert.assertNotNull(dbUserList);
-        Assert.assertFalse(dbUserList.isEmpty());
+        UserDetail condition = new UserDetail();
+        condition.setCode(userDetailList.get(0).getCode());
+        List<UserDetail> dbUserDetailList = userDetailDao.findList(condition);
+        Assert.assertNotNull(dbUserDetailList);
+        Assert.assertFalse(dbUserDetailList.isEmpty());
 
-        for (User dbUser : dbUserList) {
-            Assert.assertEquals(userList.get(0).getCode(), dbUser.getCode());
+        for (UserDetail dbUserDetail : dbUserDetailList) {
+            Assert.assertEquals(userDetailList.get(0).getCode(), dbUserDetail.getCode());
 
-            UserDetail dbUserDetail = dbUser.getUserDetail();
-            Assert.assertNotNull(dbUserDetail);
+            User dbUser = dbUserDetail.getUser();
+            Assert.assertNotNull(dbUser);
 
             UserDetailItem1 dbUserDetailItem1 = dbUserDetail.getUserDetailItem1();
             Assert.assertNotNull(dbUserDetailItem1);
