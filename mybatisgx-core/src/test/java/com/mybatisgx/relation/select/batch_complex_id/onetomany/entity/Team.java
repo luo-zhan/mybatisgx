@@ -7,7 +7,7 @@ import org.apache.ibatis.mapping.FetchType;
 import java.util.List;
 
 @Entity
-@Table(name = "bci_otm_team")
+@Table(name = "batch_otm_team_complex")
 public class Team extends EmbeddedIdBaseEntity<Long> {
 
     private String code;
