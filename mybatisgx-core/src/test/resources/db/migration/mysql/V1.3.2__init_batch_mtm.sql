@@ -14,10 +14,12 @@ create table if not exists batch_mtm_user_complex
 
 create table if not exists batch_mtm_user_role_complex
 (
-    user_id1 bigint not null comment '',
-    user_id2 bigint not null comment '',
-    role_id1 bigint not null comment '',
-    role_id2 bigint not null comment ''
+    id       bigint  not null,
+    user_id1 bigint  not null comment '',
+    user_id2 bigint  not null comment '',
+    role_id1 bigint  not null comment '',
+    role_id2 bigint  not null comment '',
+    primary key (id)
 ) engine = InnoDB
   default charset = utf8mb4;
 
@@ -38,10 +40,12 @@ create table if not exists batch_mtm_role_complex
 
 create table if not exists batch_mtm_role_menu_complex
 (
-    role_id1 bigint not null comment '',
-    role_id2 bigint not null comment '',
-    menu_id1 bigint not null comment '',
-    menu_id2 bigint not null comment ''
+    id       bigint  not null,
+    role_id1 bigint  not null comment '',
+    role_id2 bigint  not null comment '',
+    menu_id1 bigint  not null comment '',
+    menu_id2 bigint  not null comment '',
+    primary key (id)
 ) engine = InnoDB
   default charset = utf8mb4;
 
@@ -62,10 +66,12 @@ create table if not exists batch_mtm_menu_complex
 
 create table if not exists batch_mtm_menu_resource_complex
 (
-    menu_id1     bigint not null comment '',
-    menu_id2     bigint not null comment '',
-    resource_id1 bigint not null comment '',
-    resource_id2 bigint not null comment ''
+    id           bigint  not null,
+    menu_id1     bigint  not null comment '',
+    menu_id2     bigint  not null comment '',
+    resource_id1 bigint  not null comment '',
+    resource_id2 bigint  not null comment '',
+    primary key (id)
 ) engine = InnoDB
   default charset = utf8mb4;
 

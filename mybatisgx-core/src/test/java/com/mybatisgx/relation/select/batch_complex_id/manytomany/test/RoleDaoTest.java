@@ -3,13 +3,19 @@ package com.mybatisgx.relation.select.batch_complex_id.manytomany.test;
 import com.github.swierkosz.fixture.generator.FixtureGenerator;
 import com.mybatisgx.entity.MultiId;
 import com.mybatisgx.relation.select.batch_complex_id.manytomany.dao.MenuDao;
+import com.mybatisgx.relation.select.batch_complex_id.manytomany.dao.MenuResourceJoinDao;
 import com.mybatisgx.relation.select.batch_complex_id.manytomany.dao.ResourceDao;
 import com.mybatisgx.relation.select.batch_complex_id.manytomany.dao.RoleDao;
+import com.mybatisgx.relation.select.batch_complex_id.manytomany.dao.RoleMenuJoinDao;
 import com.mybatisgx.relation.select.batch_complex_id.manytomany.dao.UserDao;
+import com.mybatisgx.relation.select.batch_complex_id.manytomany.dao.UserRoleJoinDao;
 import com.mybatisgx.relation.select.batch_complex_id.manytomany.entity.Menu;
+import com.mybatisgx.relation.select.batch_complex_id.manytomany.entity.MenuResourceJoin;
 import com.mybatisgx.relation.select.batch_complex_id.manytomany.entity.Resource;
 import com.mybatisgx.relation.select.batch_complex_id.manytomany.entity.Role;
+import com.mybatisgx.relation.select.batch_complex_id.manytomany.entity.RoleMenuJoin;
 import com.mybatisgx.relation.select.batch_complex_id.manytomany.entity.User;
+import com.mybatisgx.relation.select.batch_complex_id.manytomany.entity.UserRoleJoin;
 import com.mybatisgx.util.DaoTestUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
@@ -18,9 +24,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,10 +31,14 @@ import java.util.List;
 public class RoleDaoTest {
 
     private static int count = 10;
+    private static long joinId = 200000;
     private static UserDao userDao;
     private static RoleDao roleDao;
     private static MenuDao menuDao;
     private static ResourceDao resourceDao;
+    private static UserRoleJoinDao userRoleJoinDao;
+    private static RoleMenuJoinDao roleMenuJoinDao;
+    private static MenuResourceJoinDao menuResourceJoinDao;
 
     private static List<User> userList = new ArrayList();
     private static List<Role> roleList = new ArrayList();
@@ -48,6 +55,9 @@ public class RoleDaoTest {
         roleDao = sqlSession.getMapper(RoleDao.class);
         menuDao = sqlSession.getMapper(MenuDao.class);
         resourceDao = sqlSession.getMapper(ResourceDao.class);
+        userRoleJoinDao = sqlSession.getMapper(UserRoleJoinDao.class);
+        roleMenuJoinDao = sqlSession.getMapper(RoleMenuJoinDao.class);
+        menuResourceJoinDao = sqlSession.getMapper(MenuResourceJoinDao.class);
 
         buildData();
         userDao.insertBatch(userList, count);
@@ -55,7 +65,7 @@ public class RoleDaoTest {
         menuDao.insertBatch(menuList, count);
         resourceDao.insertBatch(resourceList, count);
 
-        insertJoinData(sqlSession);
+        insertJoinData();
     }
 
     private static void buildData() {
@@ -117,51 +127,48 @@ public class RoleDaoTest {
         }
     }
 
-    private static void insertJoinData(SqlSession sqlSession) {
-        try {
-            Connection conn = sqlSession.getConnection();
-            try (PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO batch_mtm_user_role_complex (user_id1, user_id2, role_id1, role_id2) VALUES (?, ?, ?, ?)")) {
-                for (User user : userList) {
-                    for (Role role : user.getRoleList()) {
-                        ps.setLong(1, user.getMultiId().getId1());
-                        ps.setLong(2, user.getMultiId().getId2());
-                        ps.setLong(3, role.getMultiId().getId1());
-                        ps.setLong(4, role.getMultiId().getId2());
-                        ps.addBatch();
-                    }
-                }
-                ps.executeBatch();
+    private static void insertJoinData() {
+        List<UserRoleJoin> userRoleJoinList = new ArrayList();
+        for (User user : userList) {
+            for (Role role : user.getRoleList()) {
+                UserRoleJoin join = new UserRoleJoin();
+                join.setId(++joinId);
+                join.setUserId1(user.getMultiId().getId1());
+                join.setUserId2(user.getMultiId().getId2());
+                join.setRoleId1(role.getMultiId().getId1());
+                join.setRoleId2(role.getMultiId().getId2());
+                userRoleJoinList.add(join);
             }
-            try (PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO batch_mtm_role_menu_complex (role_id1, role_id2, menu_id1, menu_id2) VALUES (?, ?, ?, ?)")) {
-                for (Role role : roleList) {
-                    for (Menu menu : role.getMenuList()) {
-                        ps.setLong(1, role.getMultiId().getId1());
-                        ps.setLong(2, role.getMultiId().getId2());
-                        ps.setLong(3, menu.getMultiId().getId1());
-                        ps.setLong(4, menu.getMultiId().getId2());
-                        ps.addBatch();
-                    }
-                }
-                ps.executeBatch();
-            }
-            try (PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO batch_mtm_menu_resource_complex (menu_id1, menu_id2, resource_id1, resource_id2) VALUES (?, ?, ?, ?)")) {
-                for (Menu menu : menuList) {
-                    for (Resource resource : menu.getResourceList()) {
-                        ps.setLong(1, menu.getMultiId().getId1());
-                        ps.setLong(2, menu.getMultiId().getId2());
-                        ps.setLong(3, resource.getMultiId().getId1());
-                        ps.setLong(4, resource.getMultiId().getId2());
-                        ps.addBatch();
-                    }
-                }
-                ps.executeBatch();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
+        userRoleJoinDao.insertBatch(userRoleJoinList, userRoleJoinList.size());
+
+        List<RoleMenuJoin> roleMenuJoinList = new ArrayList();
+        for (Role role : roleList) {
+            for (Menu menu : role.getMenuList()) {
+                RoleMenuJoin join = new RoleMenuJoin();
+                join.setId(++joinId);
+                join.setRoleId1(role.getMultiId().getId1());
+                join.setRoleId2(role.getMultiId().getId2());
+                join.setMenuId1(menu.getMultiId().getId1());
+                join.setMenuId2(menu.getMultiId().getId2());
+                roleMenuJoinList.add(join);
+            }
+        }
+        roleMenuJoinDao.insertBatch(roleMenuJoinList, roleMenuJoinList.size());
+
+        List<MenuResourceJoin> menuResourceJoinList = new ArrayList();
+        for (Menu menu : menuList) {
+            for (Resource resource : menu.getResourceList()) {
+                MenuResourceJoin join = new MenuResourceJoin();
+                join.setId(++joinId);
+                join.setMenuId1(menu.getMultiId().getId1());
+                join.setMenuId2(menu.getMultiId().getId2());
+                join.setResourceId1(resource.getMultiId().getId1());
+                join.setResourceId2(resource.getMultiId().getId2());
+                menuResourceJoinList.add(join);
+            }
+        }
+        menuResourceJoinDao.insertBatch(menuResourceJoinList, menuResourceJoinList.size());
     }
 
     @Test
