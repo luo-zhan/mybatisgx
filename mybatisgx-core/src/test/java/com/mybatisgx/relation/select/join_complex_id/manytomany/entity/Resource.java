@@ -7,8 +7,8 @@ import org.apache.ibatis.mapping.FetchType;
 import java.util.List;
 
 @Entity
-@Table(name = "join_mtm_role_complex")
-public class Role extends EmbeddedIdBaseEntity<Long> {
+@Table(name = "join_mtm_resource_complex")
+public class Resource extends EmbeddedIdBaseEntity<Long> {
 
     private String code;
 
@@ -16,20 +16,16 @@ public class Role extends EmbeddedIdBaseEntity<Long> {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "join_mtm_user_role_complex",
+            name = "join_mtm_menu_resource_complex",
             joinColumns = {
-                    @JoinColumn(name = "role_id1", referencedColumnName = "id1"),
-                    @JoinColumn(name = "role_id2", referencedColumnName = "id2")
+                    @JoinColumn(name = "resource_id1", referencedColumnName = "id1"),
+                    @JoinColumn(name = "resource_id2", referencedColumnName = "id2")
             },
             inverseJoinColumns = {
-                    @JoinColumn(name = "user_id1", referencedColumnName = "id1"),
-                    @JoinColumn(name = "user_id2", referencedColumnName = "id2")
+                    @JoinColumn(name = "menu_id1", referencedColumnName = "id1"),
+                    @JoinColumn(name = "menu_id2", referencedColumnName = "id2")
             }
     )
-    @Fetch(FetchMode.JOIN)
-    private List<User> userList;
-
-    @ManyToMany(mappedBy = "roleList", fetch = FetchType.LAZY)
     @Fetch(FetchMode.JOIN)
     private List<Menu> menuList;
 
@@ -47,14 +43,6 @@ public class Role extends EmbeddedIdBaseEntity<Long> {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public List<User> getUserList() {
-        return userList;
-    }
-
-    public void setUserList(List<User> userList) {
-        this.userList = userList;
     }
 
     public List<Menu> getMenuList() {

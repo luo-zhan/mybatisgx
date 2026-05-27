@@ -1,20 +1,25 @@
 package com.mybatisgx.relation.select.join_complex_id.onetomany.entity;
 
 import com.mybatisgx.annotation.*;
-import com.mybatisgx.entity.BaseEntity;
-
+import com.mybatisgx.entity.EmbeddedIdBaseEntity;
 import org.apache.ibatis.mapping.FetchType;
 
 @Entity
-@Table(name = "jci_otm_user")
-public class User extends BaseEntity<Long> {
+@Table(name = "join_otm_user_complex")
+public class User extends EmbeddedIdBaseEntity<Long> {
 
     private String code;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumns({
+            @JoinColumn(name = "team_id1", referencedColumnName = "id1"),
+            @JoinColumn(name = "team_id2", referencedColumnName = "id2")
+    })
     @Fetch(FetchMode.JOIN)
-    @JoinColumn(name = "org_id")
-    private Org org;
+    private Team team;
+
+    public User() {
+    }
 
     public String getCode() {
         return code;
@@ -24,11 +29,11 @@ public class User extends BaseEntity<Long> {
         this.code = code;
     }
 
-    public Org getOrg() {
-        return org;
+    public Team getTeam() {
+        return team;
     }
 
-    public void setOrg(Org org) {
-        this.org = org;
+    public void setTeam(Team team) {
+        this.team = team;
     }
 }

@@ -28,10 +28,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class UserDaoTest {
+public class ResourceDaoTest {
 
     private static int count = 10;
-    private static long joinId = 100000;
+    private static long joinId = 400000;
     private static UserDao userDao;
     private static RoleDao roleDao;
     private static MenuDao menuDao;
@@ -94,20 +94,20 @@ public class UserDaoTest {
 
             if (i == 0) {
                 MultiId<Long> multiId = new MultiId();
-                multiId.setId1(111111L);
-                multiId.setId2(111111L);
+                multiId.setId1(444111L);
+                multiId.setId2(444111L);
                 user.setMultiId(multiId);
                 multiId = new MultiId();
-                multiId.setId1(111112L);
-                multiId.setId2(111112L);
+                multiId.setId1(444112L);
+                multiId.setId2(444112L);
                 role.setMultiId(multiId);
                 multiId = new MultiId();
-                multiId.setId1(111113L);
-                multiId.setId2(111113L);
+                multiId.setId1(444113L);
+                multiId.setId2(444113L);
                 menu.setMultiId(multiId);
                 multiId = new MultiId();
-                multiId.setId1(111114L);
-                multiId.setId2(111114L);
+                multiId.setId1(444114L);
+                multiId.setId2(444114L);
                 resource.setMultiId(multiId);
             } else {
                 user.getMultiId().setId1(null);
@@ -174,24 +174,16 @@ public class UserDaoTest {
     @Test
     public void testFindById() {
         MultiId<Long> multiId = new MultiId();
-        multiId.setId1(111111L);
-        multiId.setId2(111111L);
-        User dbUser = userDao.findById(multiId);
-        Assert.assertNotNull(dbUser);
+        multiId.setId1(444114L);
+        multiId.setId2(444114L);
+        Resource dbResource = resourceDao.findById(multiId);
+        Assert.assertNotNull(dbResource);
 
-        User user = userList.get(0);
-        Assert.assertEquals(user.getMultiId().getId1(), dbUser.getMultiId().getId1());
-        Assert.assertEquals(user.getMultiId().getId2(), dbUser.getMultiId().getId2());
+        Resource resource = resourceList.get(0);
+        Assert.assertEquals(resource.getMultiId().getId1(), dbResource.getMultiId().getId1());
+        Assert.assertEquals(resource.getMultiId().getId2(), dbResource.getMultiId().getId2());
 
-        List<Role> dbRoleList = dbUser.getRoleList();
-        Assert.assertNotNull(dbRoleList);
-        Assert.assertFalse(dbRoleList.isEmpty());
-        Role dbRole = dbRoleList.get(0);
-        Role role = roleList.get(0);
-        Assert.assertEquals(role.getMultiId().getId1(), dbRole.getMultiId().getId1());
-        Assert.assertEquals(role.getMultiId().getId2(), dbRole.getMultiId().getId2());
-
-        List<Menu> dbMenuList = dbRole.getMenuList();
+        List<Menu> dbMenuList = dbResource.getMenuList();
         Assert.assertNotNull(dbMenuList);
         Assert.assertFalse(dbMenuList.isEmpty());
         Menu dbMenu = dbMenuList.get(0);
@@ -199,37 +191,37 @@ public class UserDaoTest {
         Assert.assertEquals(menu.getMultiId().getId1(), dbMenu.getMultiId().getId1());
         Assert.assertEquals(menu.getMultiId().getId2(), dbMenu.getMultiId().getId2());
 
-        List<Resource> dbResourceList = dbMenu.getResourceList();
-        Assert.assertNotNull(dbResourceList);
-        Assert.assertFalse(dbResourceList.isEmpty());
-        Resource dbResource = dbResourceList.get(0);
-        Resource resource = resourceList.get(0);
-        Assert.assertEquals(resource.getMultiId().getId1(), dbResource.getMultiId().getId1());
-        Assert.assertEquals(resource.getMultiId().getId2(), dbResource.getMultiId().getId2());
+        List<Role> dbRoleList = dbMenu.getRoleList();
+        Assert.assertNotNull(dbRoleList);
+        Assert.assertFalse(dbRoleList.isEmpty());
+        Role dbRole = dbRoleList.get(0);
+        Role role = roleList.get(0);
+        Assert.assertEquals(role.getMultiId().getId1(), dbRole.getMultiId().getId1());
+        Assert.assertEquals(role.getMultiId().getId2(), dbRole.getMultiId().getId2());
+
+        List<User> dbUserList = dbRole.getUserList();
+        Assert.assertNotNull(dbUserList);
+        Assert.assertFalse(dbUserList.isEmpty());
+        User dbUser = dbUserList.get(0);
+        User user = userList.get(0);
+        Assert.assertEquals(user.getMultiId().getId1(), dbUser.getMultiId().getId1());
+        Assert.assertEquals(user.getMultiId().getId2(), dbUser.getMultiId().getId2());
     }
 
     @Test
     public void testFindList() {
-        List<User> dbUserList = userDao.findList(new User());
-        Assert.assertNotNull(dbUserList);
-        Assert.assertEquals(count, dbUserList.size());
+        List<Resource> dbResourceList = resourceDao.findList(new Resource());
+        Assert.assertNotNull(dbResourceList);
+        Assert.assertEquals(count, dbResourceList.size());
 
         for (int i = 0; i < count; i++) {
-            User user = userList.get(i);
-            User dbUser = dbUserList.get(i);
+            Resource resource = resourceList.get(i);
+            Resource dbResource = dbResourceList.get(i);
 
-            Assert.assertEquals(user.getMultiId().getId1(), dbUser.getMultiId().getId1());
-            Assert.assertEquals(user.getMultiId().getId2(), dbUser.getMultiId().getId2());
+            Assert.assertEquals(resource.getMultiId().getId1(), dbResource.getMultiId().getId1());
+            Assert.assertEquals(resource.getMultiId().getId2(), dbResource.getMultiId().getId2());
 
-            List<Role> dbRoleList = dbUser.getRoleList();
-            Assert.assertNotNull(dbRoleList);
-            Assert.assertFalse(dbRoleList.isEmpty());
-            Role dbRole = dbRoleList.get(0);
-            Role role = roleList.get(i);
-            Assert.assertEquals(role.getMultiId().getId1(), dbRole.getMultiId().getId1());
-            Assert.assertEquals(role.getMultiId().getId2(), dbRole.getMultiId().getId2());
-
-            List<Menu> dbMenuList = dbRole.getMenuList();
+            List<Menu> dbMenuList = dbResource.getMenuList();
             Assert.assertNotNull(dbMenuList);
             Assert.assertFalse(dbMenuList.isEmpty());
             Menu dbMenu = dbMenuList.get(0);
@@ -237,38 +229,46 @@ public class UserDaoTest {
             Assert.assertEquals(menu.getMultiId().getId1(), dbMenu.getMultiId().getId1());
             Assert.assertEquals(menu.getMultiId().getId2(), dbMenu.getMultiId().getId2());
 
-            List<Resource> dbResourceList = dbMenu.getResourceList();
-            Assert.assertNotNull(dbResourceList);
-            Assert.assertFalse(dbResourceList.isEmpty());
-            Resource dbResource = dbResourceList.get(0);
-            Resource resource = resourceList.get(i);
-            Assert.assertEquals(resource.getMultiId().getId1(), dbResource.getMultiId().getId1());
-            Assert.assertEquals(resource.getMultiId().getId2(), dbResource.getMultiId().getId2());
+            List<Role> dbRoleList = dbMenu.getRoleList();
+            Assert.assertNotNull(dbRoleList);
+            Assert.assertFalse(dbRoleList.isEmpty());
+            Role dbRole = dbRoleList.get(0);
+            Role role = roleList.get(i);
+            Assert.assertEquals(role.getMultiId().getId1(), dbRole.getMultiId().getId1());
+            Assert.assertEquals(role.getMultiId().getId2(), dbRole.getMultiId().getId2());
+
+            List<User> dbUserList = dbRole.getUserList();
+            Assert.assertNotNull(dbUserList);
+            Assert.assertFalse(dbUserList.isEmpty());
+            User dbUser = dbUserList.get(0);
+            User user = userList.get(i);
+            Assert.assertEquals(user.getMultiId().getId1(), dbUser.getMultiId().getId1());
+            Assert.assertEquals(user.getMultiId().getId2(), dbUser.getMultiId().getId2());
         }
     }
 
     @Test
     public void testFindListWithCondition() {
-        User condition = new User();
-        condition.setCode(userList.get(0).getCode());
-        List<User> dbUserList = userDao.findList(condition);
-        Assert.assertNotNull(dbUserList);
-        Assert.assertFalse(dbUserList.isEmpty());
+        Resource condition = new Resource();
+        condition.setCode(resourceList.get(0).getCode());
+        List<Resource> dbResourceList = resourceDao.findList(condition);
+        Assert.assertNotNull(dbResourceList);
+        Assert.assertFalse(dbResourceList.isEmpty());
 
-        for (User dbUser : dbUserList) {
-            Assert.assertEquals(userList.get(0).getCode(), dbUser.getCode());
+        for (Resource dbResource : dbResourceList) {
+            Assert.assertEquals(resourceList.get(0).getCode(), dbResource.getCode());
 
-            List<Role> dbRoleList = dbUser.getRoleList();
-            Assert.assertNotNull(dbRoleList);
-            Assert.assertFalse(dbRoleList.isEmpty());
-
-            List<Menu> dbMenuList = dbRoleList.get(0).getMenuList();
+            List<Menu> dbMenuList = dbResource.getMenuList();
             Assert.assertNotNull(dbMenuList);
             Assert.assertFalse(dbMenuList.isEmpty());
 
-            List<Resource> dbResourceList = dbMenuList.get(0).getResourceList();
-            Assert.assertNotNull(dbResourceList);
-            Assert.assertFalse(dbResourceList.isEmpty());
+            List<Role> dbRoleList = dbMenuList.get(0).getRoleList();
+            Assert.assertNotNull(dbRoleList);
+            Assert.assertFalse(dbRoleList.isEmpty());
+
+            List<User> dbUserList = dbRoleList.get(0).getUserList();
+            Assert.assertNotNull(dbUserList);
+            Assert.assertFalse(dbUserList.isEmpty());
         }
     }
 }
