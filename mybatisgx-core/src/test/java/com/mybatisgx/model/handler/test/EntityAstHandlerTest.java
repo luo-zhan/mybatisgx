@@ -1,4 +1,4 @@
-package com.mybatisgx.model.handler.test.entity;
+package com.mybatisgx.model.handler.test;
 
 import com.mybatisgx.ext.session.MybatisgxConfiguration;
 import com.mybatisgx.model.ConditionInfo;
